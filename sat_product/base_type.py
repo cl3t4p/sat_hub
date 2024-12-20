@@ -4,6 +4,7 @@ from pyproj import Geod
 import datetime
 import os
 import tarfile
+import shutil
 
 
 class BaseType(ABC):

@@ -1,4 +1,5 @@
 from utils.arguments import check_args, base_parser
+from sat_product.base_type import BaseType
 
 # Parse the arguments
 parser = base_parser()
@@ -9,13 +10,20 @@ except Exception as e:
     print(f"An error occurred: {e}")
     exit()
 
-# Import the necessary modules
-from sat_product.stype import SType
 
+product : BaseType = None
+match args.type:
+    case "gprox":
+        from sat_product.gprox import GProx
+        product = GProx(vars(args))
+    case "stype":
+        from sat_product.stype import SType
+        product = SType(vars(args))
+    case _:
+        print("Invalid type")
+        exit()
 
-# Create the SatType object
-stype = SType(vars(args))
 
 # Process the data
-stype.process()
+product.process()
 print("Process completed")

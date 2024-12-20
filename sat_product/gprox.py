@@ -1,5 +1,10 @@
 from .base_type import BaseType
 from sentinelhub import SentinelHubRequest, DataCollection
+import sat_img_processing
+import cv2
+import numpy as np
+import os
+from PIL import Image
 
 class GProx(BaseType):
     
@@ -9,6 +14,7 @@ class GProx(BaseType):
         # Il valore di metri di raggio sono i metri di raggio che l'utente vuole considerare per il calcolo dell'indice di prossimità di verde
         # Dividendo i metri di raggio per la risoluzione si ottiene il raggio in pixel, che verrà utilizzato per il calcolo dell'indice di prossimità di verde
         self.vegetationIndexRadius = round(float(args["meterRadius"]) / resolution)
+        print(f"Output folder: {self.outputFolder}")
         
     def process(self):
         request = self.get_request()
@@ -16,6 +22,18 @@ class GProx(BaseType):
         response = request.get_data(save_data=True)
         print("Request completed")
         BaseType.extractImagesFromTar(self.outputFolder)
+        
+        
+        
+        value_matrix = GProx.getValuesMatrix(self.outputFolder + "/extracted_contents/default.tif")
+        percentage_matrix = sat_img_processing.get_percentage_matrix(value_matrix, self.vegetationIndexRadius)
+        
+        sat_img_processing.generate_image(percentage_matrix, self.outputFolder + "/output.tif")
+        
+        os.rename(self.outputFolder + "/extracted_contents/default.jpg", self.outputFolder + "/extracted_contents/default1.jpg")
+        GProx.tiff2Jpg(self.outputFolder + "/extracted_contents/default.tiff", self.outputFolder+ "/extracted_contents/default.jpg")
+        
+        
         
         
     def get_input_data(self):
@@ -26,6 +44,36 @@ class GProx(BaseType):
                 other_args={"dataFilter": {"maxCloudCoverage": self.maxCloudCoverage}}
             ),
         ]
+        
+    @staticmethod
+    def tiff2Jpg(inputPath, outputPath):
+        try:
+            # Apri l'immagine TIFF
+            with Image.open(inputPath) as img:
+                # Converti l'immagine in RGB (necessario per salvare come JPG)
+                img = img.convert("RGB")
+                # Salva l'immagine in formato JPG
+                img.save(outputPath, "JPEG")
+        except Exception as e:
+            print(f"Conversion error: {e}")
+        
+    @staticmethod
+    def getValuesMatrix(inputImagePath):
+        print(f"Reading image: {inputImagePath}")
+        image = cv2.imread(inputImagePath)
+        height, width, _ = image.shape
+
+        # La matrice viene inizializzata con tutti zeri
+        value_matrix = np.zeros((height, width), dtype=np.int32)
+
+        for y in range(height):
+            for x in range(width):
+                pixelColor = image[y, x]
+                # Verifica se il colore del pixel è nero (RGB: 0, 0, 0)
+                if np.array_equal(pixelColor, [0, 0, 0]):
+                    value_matrix[y][x] = 1
+
+        return value_matrix
     
     def get_evalscript(self):
         return """

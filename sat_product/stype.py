@@ -3,7 +3,7 @@ from sentinelhub import SentinelHubRequest, DataCollection
 from utils.functions import extractImagesFromTar, convertImageTo4Colors
 from os import path
 import subprocess
-import stype_img_convert
+from sat_img_processing import convert_image_to_4_colors
 
 class SType(base_type.BaseType):
     
@@ -27,7 +27,7 @@ class SType(base_type.BaseType):
         start_time = time.time()
 
         # Perform the conversion
-        stype_img_convert.convert_image_to_4_colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
+        convert_image_to_4_colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
 
         # End timing the conversion process
         end_time = time.time()
@@ -52,6 +52,8 @@ class SType(base_type.BaseType):
                     ),
                 ]
         
+    
+
     
     def get_evalscript(self) -> str:
         return """
