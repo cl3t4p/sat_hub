@@ -2,7 +2,8 @@ from . import base_type
 from sentinelhub import SentinelHubRequest, DataCollection
 from utils.functions import extractImagesFromTar, convertImageTo4Colors
 from os import path
-class SatType(base_type.BaseType):
+import subprocess
+class SType(base_type.BaseType):
     
     def __init__(self, args : dict):
         super().__init__(args)
@@ -17,9 +18,28 @@ class SatType(base_type.BaseType):
         print("outputFolder: ", self.outputFolder)
         extractImagesFromTar(self.outputFolder)
         
+        
+        import time
         # L'immagine jpg scaricata viene convertita in un'immagine a 4 colori
-        convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
+        # Start timing the conversion process
+        start_time = time.time()
 
+        # Perform the conversion
+        SType.convertTIFFToRGB(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
+
+        # End timing the conversion process
+        end_time = time.time()
+        print(f"Time taken for convertTIFFToRGB: {end_time - start_time} seconds")
+
+        # Start timing the conversion process
+        start_time = time.time()
+
+        # Perform the conversion
+        convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefaultOld.tif"))
+
+        # End timing the conversion process
+        end_time = time.time()
+        print(f"Time taken for convertImageTo4Colors: {end_time - start_time} seconds")
 
     def get_input_data(self):
          return [
@@ -29,6 +49,20 @@ class SatType(base_type.BaseType):
                         other_args={"dataFilter": {"maxCloudCoverage": self.maxCloudCoverage}}
                     ),
                 ]
+    
+    @staticmethod
+    def convertTIFFToRGB(inputPath, outputPath):
+        command = [
+            "libs\\stype_img_convert\\target\\debug\\stype_convert.exe",
+            inputPath,
+            outputPath
+        ]
+        try:
+            subprocess.run(command, check=True)
+            print(f"Conversion from TIFF to RGB completed: {outputPath}")
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred during conversion: {e}")
+        
     
     def get_evalscript(self) -> str:
         return """
