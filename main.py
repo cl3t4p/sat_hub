@@ -10,11 +10,11 @@ except Exception as e:
     exit()
 
 # Import the necessary modules
-from sat_type.stype import SatType
+from sat_product.stype import SType
 
 
 # Create the SatType object
-stype = SatType(vars(args))
+stype = SType(vars(args))
 
 # Process the data
 stype.process()

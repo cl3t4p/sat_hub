@@ -3,6 +3,8 @@ from sentinelhub import SentinelHubRequest, DataCollection
 from utils.functions import extractImagesFromTar, convertImageTo4Colors
 from os import path
 import subprocess
+import stype_img_convert
+
 class SType(base_type.BaseType):
     
     def __init__(self, args : dict):
@@ -25,7 +27,7 @@ class SType(base_type.BaseType):
         start_time = time.time()
 
         # Perform the conversion
-        SType.convertTIFFToRGB(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
+        stype_img_convert.convert_image_to_4_colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
 
         # End timing the conversion process
         end_time = time.time()
@@ -49,19 +51,6 @@ class SType(base_type.BaseType):
                         other_args={"dataFilter": {"maxCloudCoverage": self.maxCloudCoverage}}
                     ),
                 ]
-    
-    @staticmethod
-    def convertTIFFToRGB(inputPath, outputPath):
-        command = [
-            "libs\\stype_img_convert\\target\\debug\\stype_convert.exe",
-            inputPath,
-            outputPath
-        ]
-        try:
-            subprocess.run(command, check=True)
-            print(f"Conversion from TIFF to RGB completed: {outputPath}")
-        except subprocess.CalledProcessError as e:
-            print(f"An error occurred during conversion: {e}")
         
     
     def get_evalscript(self) -> str:

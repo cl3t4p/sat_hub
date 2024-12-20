@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from sentinelhub import SentinelHubRequest, MimeType, CRS, BBox, Geometry, SHConfig
 from pyproj import Geod
 import datetime
+import os
+import tarfile
 
 
 class BaseType(ABC):
@@ -57,7 +59,7 @@ class BaseType(ABC):
         horizontalSideMeter = BaseType.wgs84.inv(
             self.NW_Long, self.NW_Lat, self.SE_Long, self.NW_Lat
         )[2]
-        longSide = max(verticalSideMeter, horizontalSideMeter)
+        self.longSide = max(verticalSideMeter, horizontalSideMeter)
         shortSide = min(verticalSideMeter, horizontalSideMeter)
         
         
@@ -143,3 +145,31 @@ class BaseType(ABC):
     @abstractmethod
     def process(self):
         pass
+
+    @staticmethod
+    def extractImagesFromTar(outputFolderPath : str):
+        print("Extracting images...")
+        
+        for subdir in os.listdir(outputFolderPath):
+            subdir_path = os.path.join(outputFolderPath, subdir)
+            if os.path.isdir(subdir_path):
+                if "response.tar" in os.listdir(subdir_path):
+                    tarPath = os.path.join(subdir_path, "response.tar")
+                    targetFolder = os.path.join(outputFolderPath, "extracted_contents")
+                    if not os.path.exists(targetFolder):
+                        os.makedirs(targetFolder)
+                    with tarfile.open(tarPath, 'r') as tar:
+                        tar.extractall(targetFolder)
+                    # Rimuovere la tar
+                    os.remove(tarPath)
+                    
+                    # Move the extracted contents to the target folder
+                    for item in os.listdir(subdir_path):
+                        s = os.path.join(subdir_path, item)
+                        d = os.path.join(outputFolderPath, item)
+                        shutil.move(s, d)
+                    
+                    # Remove the now empty extracted_contents folder
+                    os.rmdir(subdir_path)
+
+        print("Extraction completed")
