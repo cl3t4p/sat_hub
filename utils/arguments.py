@@ -25,6 +25,9 @@ def base_parser():
     Subparsers:
         gprox: Gprox specific options.
             -mr, --meterRadius (int): Meter radius for gprox (required).
+        stype: Stype specific options.
+        vis: Vis specific options.
+        stemp: Stemp specific options.
     Returns:
         argparse.ArgumentParser: Configured argument parser.
     """
@@ -50,6 +53,12 @@ def base_parser():
     #Stype specific options
     subparsers.add_parser('stype', help='Stype specific options')
     
+    
+    #Vis specific options
+    subparsers.add_parser('vis', help='Vis specific options')
+    
+    #Stemp specific options
+    subparsers.add_parser('stemp', help='Stemp specific options')
 
 
     return parser

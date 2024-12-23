@@ -36,7 +36,7 @@ class GProx(BaseType):
         
         
         
-    def get_input_data(self):
+    def get_input_type(self):
         return [
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L2A,     

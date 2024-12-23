@@ -13,37 +13,38 @@ class SType(base_type.BaseType):
     def process(self):
         request = self.get_request()
         print("Request sent")
-        response = request.get_data(save_data=True)
+        response = request.get_data(save_data=True,show_progress=True)
         print("Request completed")
 
         # Estrazione delle immagini dal file tar
+        
         print("outputFolder: ", self.outputFolder)
         extractImagesFromTar(self.outputFolder)
         
         
-        import time
+        #import time
         # L'immagine jpg scaricata viene convertita in un'immagine a 4 colori
         # Start timing the conversion process
-        start_time = time.time()
+        #start_time = time.time()
 
         # Perform the conversion
         convert_image_to_4_colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
 
         # End timing the conversion process
-        end_time = time.time()
-        print(f"Time taken for convertTIFFToRGB: {end_time - start_time} seconds")
+        #end_time = time.time()
+        #print(f"Time taken for convertTIFFToRGB: {end_time - start_time} seconds")
 
         # Start timing the conversion process
-        start_time = time.time()
+        #start_time = time.time()
 
         # Perform the conversion
-        convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefaultOld.tif"))
+        #convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefaultOld.tif"))
 
         # End timing the conversion process
-        end_time = time.time()
-        print(f"Time taken for convertImageTo4Colors: {end_time - start_time} seconds")
+        #end_time = time.time()
+        #print(f"Time taken for convertImageTo4Colors: {end_time - start_time} seconds")
 
-    def get_input_data(self):
+    def get_input_type(self):
          return [
                     SentinelHubRequest.input_data(
                         data_collection=DataCollection.SENTINEL2_L2A,     

@@ -19,6 +19,12 @@ match args.type:
     case "stype":
         from sat_product.stype import SType
         product = SType(vars(args))
+    case "vis":
+        from sat_product.vis import Vis
+        product = Vis(vars(args))
+    case "stemp":
+        from sat_product.stemp import STemp
+        product = STemp(vars(args))
     case _:
         print("Invalid type")
         exit()

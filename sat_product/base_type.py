@@ -31,24 +31,24 @@ class BaseType(ABC):
 
     wgs84 = Geod(ellps="WGS84")
 
-    def __init__(self, args: dict):
+    def __init__(self, config: dict):
         # Auth configuration
         self.config = SHConfig()
-        self.config.sh_client_id = args["client_id"]
-        self.config.sh_client_secret = args["client_secret"]
+        self.config.sh_client_id = config["client_id"]
+        self.config.sh_client_secret = config["client_secret"]
 
         # Geographical parameters
-        self.timeIntervalStart = args["start_date"]
-        self.timeIntervalEnd = args["end_date"]
-        self.NW_Long = args["point1"][1]
-        self.NW_Lat = args["point1"][0]
-        self.SE_Long = args["point2"][1]
-        self.SE_Lat = args["point2"][0]
-        self.maxCloudCoverage = args["cloud_coverage"]
-        pixel_value = args["pixel_value"]
+        self.timeIntervalStart = config["start_date"]
+        self.timeIntervalEnd = config["end_date"]
+        self.NW_Long = config["point1"][1]
+        self.NW_Lat = config["point1"][0]
+        self.SE_Long = config["point2"][1]
+        self.SE_Lat = config["point2"][0]
+        self.maxCloudCoverage = config["cloud_coverage"]
+        pixel_value = config["pixel_value"]
 
         # Output folder
-        self.outputFolder = self.get_outfolder(args["output"])
+        self.outputFolder = self.get_outfolder(config["output"])
 
         # Resolution calculation
         # The dimensions in meters of the area of interest are calculated.
@@ -93,11 +93,8 @@ class BaseType(ABC):
         request = SentinelHubRequest(
             evalscript=self.get_evalscript(),
             data_folder=self.outputFolder,
-            input_data=self.get_input_data(),
-            responses=[
-                SentinelHubRequest.output_response("default", MimeType.TIFF),
-                SentinelHubRequest.output_response("default", MimeType.JPG),
-            ],
+            input_data=self.get_input_type(),
+            responses=self.get_response_type(),
             bbox=bbox,
             geometry=geometry,
             size=[self.horizontalSidePixel, self.verticalSidePixel],
@@ -134,9 +131,15 @@ class BaseType(ABC):
         else:
             className = self.__class__.__name__
             return f"{className}_{time}"
+        
+    def get_response_type(self) -> list:
+        return [
+            SentinelHubRequest.output_response('default', MimeType.TIFF),
+            SentinelHubRequest.output_response('default', MimeType.JPG),
+        ]
 
     @abstractmethod
-    def get_input_data(self) -> list:
+    def get_input_type(self) -> list:
         pass
 
     @abstractmethod
