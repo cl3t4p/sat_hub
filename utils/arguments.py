@@ -41,7 +41,7 @@ def base_parser():
     parser.add_argument('-c','--cloud_coverage', type=int, default=20, help='Cloud Coverage percentage (default: 20)')
     parser.add_argument('-p1', '--point1', type=float, nargs=2, required=True, help='First point (latitude and longitude)')
     parser.add_argument('-p2', '--point2', type=float, nargs=2, required=True, help='Second point (latitude and longitude)')
-    parser.add_argument('-o', '--output', type=str, help="Output folder default is '\{type\}_*date_time*' where *date_time* is a placeholder for the current date and time")
+    parser.add_argument('-o', '--output', type=str, help="Output folder default is '{type}_*date_time*' where *date_time* is a placeholder for the current date and time")
     parser.add_argument('--pixel_value', type=int, default=750, help='Pixel value for the long side of the area of interest (default: 750)')
     parser.add_argument('--html', action='store_true', help='Output html file')
     
