@@ -1,11 +1,10 @@
-from . import base_type
+from . import basetype_sent
 from sentinelhub import SentinelHubRequest, DataCollection
 from utils.functions import extractImagesFromTar, convertImageTo4Colors
 from os import path
-import subprocess
 from sat_img_processing import convert_image_to_4_colors
 
-class SType(base_type.BaseType):
+class SType(basetype_sent.SentinelBaseType):
     
     def __init__(self, args : dict):
         super().__init__(args)
@@ -22,27 +21,27 @@ class SType(base_type.BaseType):
         extractImagesFromTar(self.outputFolder)
         
         
-        #import time
+        import time
         # L'immagine jpg scaricata viene convertita in un'immagine a 4 colori
         # Start timing the conversion process
-        #start_time = time.time()
+        start_time = time.time()
 
         # Perform the conversion
         convert_image_to_4_colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
 
         # End timing the conversion process
-        #end_time = time.time()
-        #print(f"Time taken for convertTIFFToRGB: {end_time - start_time} seconds")
+        end_time = time.time()
+        print(f"Time taken for convertTIFFToRGB: {end_time - start_time} seconds")
 
         # Start timing the conversion process
-        #start_time = time.time()
+        start_time = time.time()
 
         # Perform the conversion
-        #convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefaultOld.tif"))
+        convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefaultOld.tif"))
 
         # End timing the conversion process
-        #end_time = time.time()
-        #print(f"Time taken for convertImageTo4Colors: {end_time - start_time} seconds")
+        end_time = time.time()
+        print(f"Time taken for convertImageTo4Colors: {end_time - start_time} seconds")
 
     def get_input_type(self):
          return [

@@ -1,6 +1,6 @@
 [package]
-name = "sat_img_processing"
-version = "0.1.1"
+name = "geotiff_s3_lib"
+version = "0.1.0"
 edition = "2021"
 
 [dependencies]

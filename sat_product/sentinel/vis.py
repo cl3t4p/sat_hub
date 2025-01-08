@@ -1,7 +1,7 @@
-from .base_type import BaseType
+from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
 
-class Vis(BaseType):
+class Vis(SentinelBaseType):
     def __init__(self, args : dict):
         super().__init__(args)
         
@@ -21,7 +21,7 @@ class Vis(BaseType):
         print("Request sent")
         response = request.get_data(save_data=True)
         print("Request completed")
-        BaseType.extractImagesFromTar(self.outputFolder)
+        SentinelBaseType.extractImagesFromTar(self.outputFolder)
     
     def get_evalscript(self):
         return """

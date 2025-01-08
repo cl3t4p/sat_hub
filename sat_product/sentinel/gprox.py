@@ -1,4 +1,4 @@
-from .base_type import BaseType
+from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
 import sat_img_processing
 import cv2
@@ -6,7 +6,7 @@ import numpy as np
 import os
 from PIL import Image
 
-class GProx(BaseType):
+class GProx(SentinelBaseType):
     
     def __init__(self, args : dict):
         super().__init__(args)
@@ -21,7 +21,7 @@ class GProx(BaseType):
         print("Request sent")
         response = request.get_data(save_data=True)
         print("Request completed")
-        BaseType.extractImagesFromTar(self.outputFolder)
+        SentinelBaseType.extractImagesFromTar(self.outputFolder)
         
         
         

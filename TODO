@@ -1,0 +1,8 @@
+- Request response in memory
+- Use built-in cache
+- Use Planet sat
+- Create a simple lib interface
+- Rstudio lib using python
+- Mathlab lib using python
+- GeoTIFF
+- Implement AWS Dataset like WorldCover

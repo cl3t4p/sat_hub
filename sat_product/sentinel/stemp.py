@@ -1,11 +1,11 @@
-from .base_type import BaseType
+from .basetype_sent import SentinelBaseType
 from sentinelhub import (
     SentinelHubRequest,
     DataCollection
 )
 
 
-class STemp(BaseType):
+class STemp(SentinelBaseType):
     def __init__(self, config):
         super().__init__(config)
     
@@ -14,7 +14,7 @@ class STemp(BaseType):
         print("Request sent")
         response = request.get_data(save_data=True,show_progress=True)
         print("Request completed")
-        BaseType.extractImagesFromTar(self.outputFolder)
+        SentinelBaseType.extractImagesFromTar(self.outputFolder)
         with open(f"{self.outputFolder}/response.tif", "wb") as f:
             f.write(response[0])
 

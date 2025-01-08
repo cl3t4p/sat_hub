@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from sat_product.basesat import BaseSatType
 from sentinelhub import SentinelHubRequest, MimeType, CRS, BBox, Geometry, SHConfig
 from pyproj import Geod
 import datetime
@@ -7,7 +8,7 @@ import tarfile
 import shutil
 
 
-class BaseType(ABC):
+class SentinelBaseType(BaseSatType):
     """
     BaseType is an abstract base class that provides a template for satellite data processing.
     Attributes:
@@ -32,18 +33,15 @@ class BaseType(ABC):
     wgs84 = Geod(ellps="WGS84")
 
     def __init__(self, config: dict):
+        # Initialize the base class with the configuration parameters
+        super().__init__(config)
+        
         # Auth configuration
         self.config = SHConfig()
         self.config.sh_client_id = config["client_id"]
         self.config.sh_client_secret = config["client_secret"]
 
         # Geographical parameters
-        self.timeIntervalStart = config["start_date"]
-        self.timeIntervalEnd = config["end_date"]
-        self.NW_Long = config["point1"][1]
-        self.NW_Lat = config["point1"][0]
-        self.SE_Long = config["point2"][1]
-        self.SE_Lat = config["point2"][0]
         self.maxCloudCoverage = config["cloud_coverage"]
         pixel_value = config["pixel_value"]
 
@@ -54,10 +52,10 @@ class BaseType(ABC):
         # The dimensions in meters of the area of interest are calculated.
         # The dimensions in pixels of the area of interest are calculated.
         # The resolution is calculated (dimensions in meters / dimensions in pixels).
-        verticalSideMeter = BaseType.wgs84.inv(
+        verticalSideMeter = SentinelBaseType.wgs84.inv(
             self.NW_Long, self.NW_Lat, self.NW_Long, self.SE_Lat
         )[2]
-        horizontalSideMeter = BaseType.wgs84.inv(
+        horizontalSideMeter = SentinelBaseType.wgs84.inv(
             self.NW_Long, self.NW_Lat, self.SE_Long, self.NW_Lat
         )[2]
         self.longSide = max(verticalSideMeter, horizontalSideMeter)
@@ -110,27 +108,6 @@ class BaseType(ABC):
             [self.SE_Long, self.SE_Lat],
             [self.NW_Long, self.SE_Lat],
         ]
-
-    def get_outfolder(self, outfolder):
-        """
-        Generates an output folder path based on the provided template or class name.
-
-        Args:
-            outfolder (str): The template for the output folder path. If it contains
-                             the placeholder "*date_time*", it will be replaced with
-                             the current date and time in the format "YYYY-MM-DD_HH-MM-SS".
-                             If None, the output folder path will be generated using
-                             the class name and the current date and time.
-
-        Returns:
-            str: The generated output folder path.
-        """
-        time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        if outfolder is not None:
-            return outfolder.replace("*date_time*", time)
-        else:
-            className = self.__class__.__name__
-            return f"{className}_{time}"
         
     def get_response_type(self) -> list:
         return [

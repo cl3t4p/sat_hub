@@ -11,3 +11,5 @@ test.bat
 Cargo.lock
 
 **/target/
+output/
+cache/
