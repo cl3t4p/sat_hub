@@ -59,6 +59,8 @@ def base_parser():
     #Stemp specific options
     subparsers.add_parser('stemp', help='Stemp specific options')
 
+    #S3 ESA World Cover specific options
+    subparsers.add_parser('s3_esaworldcover', help='S3 ESA World Cover specific options')
 
     return parser
     
