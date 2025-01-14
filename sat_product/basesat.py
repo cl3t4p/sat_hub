@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 import datetime
+from shapely.geometry import Point
 
 class BaseSatType(ABC):
     
     def __init__(self, config: dict):
-        self.timeIntervalStart = config["start_date"]
-        self.timeIntervalEnd = config["end_date"]
+        self.NW_point = Point(config["point1"])
+        self.SE_point = Point(config["point2"])
         self.NW_Long = config["point1"][1]
         self.NW_Lat = config["point1"][0]
         self.SE_Long = config["point2"][1]

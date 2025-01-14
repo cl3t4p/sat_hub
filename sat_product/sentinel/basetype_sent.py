@@ -41,6 +41,10 @@ class SentinelBaseType(BaseSatType):
         self.config.sh_client_id = config["client_id"]
         self.config.sh_client_secret = config["client_secret"]
 
+        # Time interval
+        self.timeIntervalStart = config["start_date"]
+        self.timeIntervalEnd = config["end_date"]
+
         # Geographical parameters
         self.maxCloudCoverage = config["cloud_coverage"]
         pixel_value = config["pixel_value"]

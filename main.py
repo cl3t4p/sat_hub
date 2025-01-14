@@ -1,5 +1,5 @@
 from utils.arguments import check_args, base_parser
-from sat_product.sentinel.basetype_sent import SentinelBaseType
+from sat_product.sentinel.basetype_sent import BaseSatType
 import toml
 
 # Parse the arguments
@@ -15,7 +15,7 @@ config = vars(args)
 # Load config.toml
 config.update(toml.load("config.toml"))
 
-product : SentinelBaseType = None
+product : BaseSatType = None
 match args.type:
     case "gprox":
         from sat_product.sentinel.gprox import GProx

@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
+
 use tiff::decoder::{Decoder, DecodingResult};
 use tiff::encoder::{colortype::Gray16, TiffEncoder};
 use std::fs::File;
@@ -16,7 +16,7 @@ use std::fs::File;
 #[pyfunction]
 fn combine_geotiffs_with_box(
     input_paths: Vec<String>,
-    bounding_box: (u32, u32, u32, u32),
+    bounding_box: (f64, f64, f64, f64),
     output_path: String,
 ) -> PyResult<bool> {
     let (x_min, y_min, x_max, y_max) = bounding_box;
@@ -27,15 +27,15 @@ fn combine_geotiffs_with_box(
         let mut decoder = Decoder::new(file).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
         let (width, height) = decoder.dimensions().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        if x_max > width || y_max > height {
+        if x_max > width as f64 || y_max > height as f64 {
             return Ok(false);
         }
 
         if let DecodingResult::U16(data) = decoder.read_image().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))? {
             let mut cropped = Vec::new();
             for y in y_min..y_max {
-                let start = (y * width + x_min) as usize;
-                let end = (y * width + x_max) as usize;
+                let start = (y as u32 * width + x_min as u32) as usize;
+                let end = ((y as u32) * width + x_max as u32) as usize;
                 cropped.extend_from_slice(&data[start..end]);
             }
             combined_data.push(cropped);
@@ -55,13 +55,12 @@ fn combine_geotiffs_with_box(
 }
 
 
-#[pyfunction]
-fn add_two_numbers(a: usize, b: usize) -> PyResult<usize> {
-    Ok(a + b)
-}
-/// Python module definition
+
+
+
+/// A Python module implemented in Rust.
 #[pymodule]
-fn geotiff_s3_lib(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(add_two_numbers, m)?)?;
+fn sat_hub_lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(combine_geotiffs_with_box, m)?)?;
     Ok(())
 }
