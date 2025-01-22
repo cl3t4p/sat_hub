@@ -21,7 +21,7 @@ class Vis(SentinelBaseType):
         print("Request sent")
         response = request.get_data(save_data=True)
         print("Request completed")
-        SentinelBaseType.extractImagesFromTar(self.outputFolder)
+        SentinelBaseType.extractImagesFromTar(self.output_folder)
     
     def get_evalscript(self):
         return """

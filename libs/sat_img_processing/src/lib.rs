@@ -1,12 +1,12 @@
 use image::{GenericImageView, ImageBuffer, Rgb};
 use ndarray::{Array2};
-use numpy::{PyArray2, IntoPyArray};
+use numpy::{PyArray2, IntoPyArray, PyReadonlyArray2};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
 #[pyfunction]
-fn get_percentage_matrix(py: Python, matrix: &PyArray2<i32>, radius: usize) -> Py<PyArray2<f64>> {
-    let matrix = unsafe { matrix.as_array() };
+fn get_percentage_matrix(py: Python, matrix: PyReadonlyArray2<i32>, radius: usize) -> PyArray2<f64> {
+    let matrix = matrix.as_array();
     let height = matrix.shape()[0];
     let width = matrix.shape()[1];
     let mut percentage_matrix = Array2::<f64>::zeros((height, width));
@@ -49,7 +49,24 @@ fn get_percentage_matrix(py: Python, matrix: &PyArray2<i32>, radius: usize) -> P
         }
     }
 
-    percentage_matrix.into_pyarray(py).to_owned()
+    percentage_matrix.into_pyarray(py).unbind().
+`}
+
+
+fn closest_color(pixel: Rgb<u8>, colors: &[(u8, u8, u8)]) -> Rgb<u8> {
+    let mut min_dist = f32::MAX;
+    let mut closest_color = Rgb([0, 0, 0]);
+    for &color in colors.iter() {
+        let dist = ((pixel[0] as f32 - color.0 as f32).powi(2)
+            + (pixel[1] as f32 - color.1 as f32).powi(2)
+            + (pixel[2] as f32 - color.2 as f32).powi(2))
+            .sqrt();
+        if dist < min_dist {
+            min_dist = dist;
+            closest_color = Rgb([color.0, color.1, color.2]);
+        }
+    }
+    closest_color
 }
 
 #[pyfunction]
@@ -72,23 +89,6 @@ fn convert_image_to_4_colors(input_path: &str, output_path: &str) {
         (255, 255, 255) // white
     ];
 
-    // Function to find the closest color
-    fn closest_color(pixel: Rgb<u8>, colors: &[(u8, u8, u8)]) -> Rgb<u8> {
-        let mut min_dist = f32::MAX;
-        let mut closest_color = Rgb([0, 0, 0]);
-        for &color in colors.iter() {
-            let dist = ((pixel[0] as f32 - color.0 as f32).powi(2)
-                + (pixel[1] as f32 - color.1 as f32).powi(2)
-                + (pixel[2] as f32 - color.2 as f32).powi(2))
-                .sqrt();
-            if dist < min_dist {
-                min_dist = dist;
-                closest_color = Rgb([color.0, color.1, color.2]);
-            }
-        }
-        closest_color
-    }
-
     // Approximate each pixel to the closest color
     for (i, pixel) in img.pixels_mut().enumerate() {
         let new_color = closest_color(*pixel, &colors);
@@ -108,8 +108,8 @@ fn convert_image_to_4_colors(input_path: &str, output_path: &str) {
 }
 
 #[pyfunction]
-fn generate_image(py: Python, matrix: &PyArray2<f64>, output_path: &str) {
-    let matrix = unsafe { matrix.as_array() };
+fn generate_image(py: Python, matrix: PyReadonlyArray2<f64>, output_path: &str) {
+    let matrix = matrix.as_array() ;
     let height = matrix.shape()[0];
     let width = matrix.shape()[1];
 

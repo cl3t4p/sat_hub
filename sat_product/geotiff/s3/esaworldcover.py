@@ -3,9 +3,11 @@ from sat_product.geotiff.basetype_geotiff import BaseSat_GeoTiff
 import boto3
 import botocore
 import json
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon
 import os
-import sat_hub_lib
+from utils.simple_lib import extract_boundingbox,trasform_geotiff_to_png
+from rasterio.plot import show
+
 
 class S3_EsaWorldCover(BaseSat_GeoTiff):
     
@@ -15,18 +17,29 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
         super().__init__(config)
         self.s3_client = boto3.client('s3', region_name='eu-central-1',config=botocore.client.Config(signature_version=botocore.UNSIGNED))
         self.version = config["version"]
+        #Create apposite folder
     
     
     def process(self):
         tiles = self.download_files()
         
         # Extract the box from the geotiff
-        bounding_box = (self.NW_Long, self.SE_Lat, self.SE_Long, self.NW_Lat)
-        input_paths = [f"{self.cache_folder}/{tile}" for tile in tiles]
-        output_path = f"{self.cache_folder}/combined_output.tif"
-        sat_hub_lib.combine_geotiffs_with_box(input_paths, bounding_box, output_path)
-    
-    
+        bounding_box = Polygon([
+            (self.NW_Long, self.NW_Lat),
+            (self.NW_Long, self.SE_Lat),
+            (self.SE_Long, self.SE_Lat),
+            (self.SE_Long, self.NW_Lat)
+        ])
+        input_paths = tiles
+        output_file = f"{self.get_outfolder()}/combined_output.tif"
+        extract_boundingbox(input_paths, output_file, bounding_box)
+        # Open the combined output file
+
+        # Export a png image with the colormap that is
+        trasform_geotiff_to_png(output_file, f"{self.get_outfolder()}/output.png")
+
+
+
     
     def download_files(self) -> list:
         geojson_filename = f"{self.cache_folder}/esa_worldcover_grid.geojson"

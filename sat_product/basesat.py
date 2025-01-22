@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import datetime
 from shapely.geometry import Point
+import os
 
 class BaseSatType(ABC):
     
@@ -11,12 +12,20 @@ class BaseSatType(ABC):
         self.NW_Lat = config["point1"][0]
         self.SE_Long = config["point2"][1]
         self.SE_Lat = config["point2"][0]
+        # Output folder
+        self.output_folder = self.__get_outfolder(config["output"])
     
     @abstractmethod
     def process(self):
         pass
+
+    def get_outfolder(self):
+        if not os.path.exists(self.output_folder):
+            os.makedirs(self.output_folder)
+        return self.output_folder
+
     
-    def get_outfolder(self, outfolder):
+    def __get_outfolder(self, outfolder):
         """
         Generates an output folder path based on the provided template or class name.
 
@@ -32,7 +41,7 @@ class BaseSatType(ABC):
         """
         time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         if outfolder is not None:
-            return outfolder.replace("output/*date_time*", time)
+            return outfolder.replace("*date_time*", time)
         else:
             className = self.__class__.__name__
-            return f"{className}_{time}"
+            return f"output/{className}_{time}"

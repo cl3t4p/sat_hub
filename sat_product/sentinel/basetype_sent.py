@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from sat_product.basesat import BaseSatType
 from sentinelhub import SentinelHubRequest, MimeType, CRS, BBox, Geometry, SHConfig
 from pyproj import Geod
-import datetime
 import os
 import tarfile
 import shutil
@@ -49,8 +48,6 @@ class SentinelBaseType(BaseSatType):
         self.maxCloudCoverage = config["cloud_coverage"]
         pixel_value = config["pixel_value"]
 
-        # Output folder
-        self.outputFolder = self.get_outfolder(config["output"])
 
         # Resolution calculation
         # The dimensions in meters of the area of interest are calculated.
@@ -63,7 +60,7 @@ class SentinelBaseType(BaseSatType):
             self.NW_Long, self.NW_Lat, self.SE_Long, self.NW_Lat
         )[2]
         self.longSide = max(verticalSideMeter, horizontalSideMeter)
-        shortSide = min(verticalSideMeter, horizontalSideMeter)
+        self.shortSide = min(verticalSideMeter, horizontalSideMeter)
         
         
         # The resolution is calculated based on the long side of the area of interest.
@@ -82,22 +79,22 @@ class SentinelBaseType(BaseSatType):
         # Calculate the number of pixels for the vertical and horizontal sides
         self.verticalSidePixel = verticalSideMeter / self.resolution
         self.horizontalSidePixel = horizontalSideMeter / self.resolution
+        self.bbox = BBox(
+            bbox=[self.NW_Long, self.SE_Lat, self.SE_Long, self.NW_Lat], crs=CRS.WGS84
+        )
 
 
     def get_request(self) -> SentinelHubRequest:
-        bbox = BBox(
-            bbox=[self.NW_Long, self.SE_Lat, self.SE_Long, self.NW_Lat], crs=CRS.WGS84
-        )
         geometry = Geometry(
             geometry={"coordinates": [self.get_geo_cords()], "type": "Polygon"},
             crs=CRS.WGS84,
         )
         request = SentinelHubRequest(
             evalscript=self.get_evalscript(),
-            data_folder=self.outputFolder,
+            data_folder=self.output_folder,
             input_data=self.get_input_type(),
             responses=self.get_response_type(),
-            bbox=bbox,
+            bbox=self.bbox,
             geometry=geometry,
             size=[self.horizontalSidePixel, self.verticalSidePixel],
             config=self.config,

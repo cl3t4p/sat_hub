@@ -1,59 +1,73 @@
+use gdal::raster::Buffer;
+use gdal::{Driver, DriverManager};
 use pyo3::prelude::*;
+use gdal::{Dataset, raster::RasterBand};
+use gdal::errors::GdalError;
+use std::path::Path;
 
-use tiff::decoder::{Decoder, DecodingResult};
-use tiff::encoder::{colortype::Gray16, TiffEncoder};
-use std::fs::File;
-
-/// Combines multiple GeoTIFFs by extracting a region specified by a bounding box and writing to a single output GeoTIFF.
-///
-/// # Arguments
-/// - `input_paths`: A vector of paths to input GeoTIFF files.
-/// - `bounding_box`: A tuple specifying the bounding box (x_min, y_min, x_max, y_max) in pixels.
-/// - `output_path`: The path for the output GeoTIFF file.
-///
-/// # Returns
-/// A result indicating success or failure.
 #[pyfunction]
 fn combine_geotiffs_with_box(
     input_paths: Vec<String>,
-    bounding_box: (f64, f64, f64, f64),
+    bbox: (f64, f64, f64, f64),
     output_path: String,
-) -> PyResult<bool> {
-    let (x_min, y_min, x_max, y_max) = bounding_box;
-    let mut combined_data = Vec::new();
+) -> PyResult<()> {
+    let mut datasets = Vec::new();
 
-    for input_path in input_paths {
-        let file = File::open(&input_path).map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
-        let mut decoder = Decoder::new(file).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-        let (width, height) = decoder.dimensions().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-
-        if x_max > width as f64 || y_max > height as f64 {
-            return Ok(false);
-        }
-
-        if let DecodingResult::U16(data) = decoder.read_image().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))? {
-            let mut cropped = Vec::new();
-            for y in y_min..y_max {
-                let start = (y as u32 * width + x_min as u32) as usize;
-                let end = ((y as u32) * width + x_max as u32) as usize;
-                cropped.extend_from_slice(&data[start..end]);
-            }
-            combined_data.push(cropped);
-        } else {
-            return Ok(false)
+    // Load all input datasets
+    for path in &input_paths {
+        match Dataset::open(Path::new(path)) {
+            Ok(dataset) => datasets.push(dataset),
+            Err(err) => return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err))),
         }
     }
 
-    // Write the combined data to a new GeoTIFF
-    let output_file = File::create(output_path)?;
-    let mut encoder = TiffEncoder::new(output_file).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-    let combined_width = x_max - x_min;
-    let combined_height = (y_max - y_min) * (combined_data.len() as u32);
-    encoder.write_image::<Gray16>(combined_width, combined_height, &combined_data.concat()).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+    let (min_x, min_y, max_x, max_y) = bbox;
 
-    Ok(true)
+    // Determine the spatial reference and initialize the output dataset
+    let spatial_ref = datasets[0].spatial_ref().map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+    let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
+    let mut output_dataset = driver.create(
+        &output_path,
+        datasets[0].raster_size().0,
+        datasets[0].raster_size().1,
+        datasets[0].raster_count() as usize,
+    ).map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+
+    output_dataset.set_spatial_ref(&spatial_ref);
+
+    for dataset in datasets {
+        let transform = dataset.geo_transform()
+            .map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+        let pixel_size_x = transform[1];
+        let pixel_size_y = transform[5];
+        let origin_x = transform[0];
+        let origin_y = transform[3];
+
+        let x_offset = ((min_x - origin_x) / pixel_size_x).floor() as usize;
+        let y_offset = ((min_y - origin_y) / pixel_size_y).floor() as usize;
+
+        let x_end = ((max_x - origin_x) / pixel_size_x).ceil() as usize;
+        let y_end = ((max_y - origin_y) / pixel_size_y).ceil() as usize;
+
+        let x_size = x_end - x_offset;
+        let y_size = y_end - y_offset;
+
+        for band_index in 1..=dataset.raster_count() {
+            let input_band = dataset.rasterband(band_index)
+                .map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+            let mut buffer = vec![0u8; x_size * y_size];
+            let mut buffer: Buffer<u8> = input_band.read_as((x_offset as isize, y_offset as isize), (x_size, y_size), (x_size, y_size), None)
+                .map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+
+            let output_band = output_dataset.rasterband(band_index)
+                .map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+            output_band.write((x_offset as isize, y_offset as isize), (x_size, y_size), &mut &buffer)
+                .map_err(|err| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("GDAL error: {:?}", err)))?;
+        }
+    }
+
+    Ok(())
 }
-
 
 
 

@@ -14,8 +14,8 @@ class STemp(SentinelBaseType):
         print("Request sent")
         response = request.get_data(save_data=True,show_progress=True)
         print("Request completed")
-        SentinelBaseType.extractImagesFromTar(self.outputFolder)
-        with open(f"{self.outputFolder}/response.tif", "wb") as f:
+        SentinelBaseType.extractImagesFromTar(self.output_folder)
+        with open(f"{self.output_folder}/response.tif", "wb") as f:
             f.write(response[0])
 
 

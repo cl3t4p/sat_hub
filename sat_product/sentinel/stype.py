@@ -17,8 +17,8 @@ class SType(basetype_sent.SentinelBaseType):
 
         # Estrazione delle immagini dal file tar
         
-        print("outputFolder: ", self.outputFolder)
-        extractImagesFromTar(self.outputFolder)
+        print("outputFolder: ", self.output_folder)
+        extractImagesFromTar(self.output_folder)
         
         
         import time
@@ -27,7 +27,7 @@ class SType(basetype_sent.SentinelBaseType):
         start_time = time.time()
 
         # Perform the conversion
-        convert_image_to_4_colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefault.tif"))
+        convert_image_to_4_colors(path.join(self.output_folder, "extracted_contents", "default.jpg"), path.join(self.output_folder, "extracted_contents", "convertedDefault.tif"))
 
         # End timing the conversion process
         end_time = time.time()
@@ -37,7 +37,7 @@ class SType(basetype_sent.SentinelBaseType):
         start_time = time.time()
 
         # Perform the conversion
-        convertImageTo4Colors(path.join(self.outputFolder, "extracted_contents", "default.jpg"), path.join(self.outputFolder, "extracted_contents", "convertedDefaultOld.tif"))
+        convertImageTo4Colors(path.join(self.output_folder, "extracted_contents", "default.jpg"), path.join(self.output_folder, "extracted_contents", "convertedDefaultOld.tif"))
 
         # End timing the conversion process
         end_time = time.time()

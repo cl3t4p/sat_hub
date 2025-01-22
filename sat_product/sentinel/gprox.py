@@ -14,24 +14,24 @@ class GProx(SentinelBaseType):
         # Il valore di metri di raggio sono i metri di raggio che l'utente vuole considerare per il calcolo dell'indice di prossimità di verde
         # Dividendo i metri di raggio per la risoluzione si ottiene il raggio in pixel, che verrà utilizzato per il calcolo dell'indice di prossimità di verde
         self.vegetationIndexRadius = round(float(args["meterRadius"]) / resolution)
-        print(f"Output folder: {self.outputFolder}")
+        print(f"Output folder: {self.output_folder}")
         
     def process(self):
         request = self.get_request()
         print("Request sent")
         response = request.get_data(save_data=True)
         print("Request completed")
-        SentinelBaseType.extractImagesFromTar(self.outputFolder)
+        SentinelBaseType.extractImagesFromTar(self.output_folder)
         
         
         
-        value_matrix = GProx.getValuesMatrix(self.outputFolder + "/extracted_contents/default.tif")
+        value_matrix = GProx.getValuesMatrix(self.output_folder + "/extracted_contents/default.tif")
         percentage_matrix = sat_img_processing.get_percentage_matrix(value_matrix, self.vegetationIndexRadius)
         
-        sat_img_processing.generate_image(percentage_matrix, self.outputFolder + "/output.tif")
+        sat_img_processing.generate_image(percentage_matrix, self.output_folder + "/output.tif")
         
-        os.rename(self.outputFolder + "/extracted_contents/default.jpg", self.outputFolder + "/extracted_contents/default1.jpg")
-        GProx.tiff2Jpg(self.outputFolder + "/extracted_contents/default.tiff", self.outputFolder+ "/extracted_contents/default.jpg")
+        os.rename(self.output_folder + "/extracted_contents/default.jpg", self.output_folder + "/extracted_contents/default1.jpg")
+        GProx.tiff2Jpg(self.output_folder + "/extracted_contents/default.tiff", self.output_folder+ "/extracted_contents/default.jpg")
         
         
         

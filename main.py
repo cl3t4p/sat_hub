@@ -15,6 +15,14 @@ config = vars(args)
 # Load config.toml
 config.update(toml.load("config.toml"))
 
+'''
+from test import Test
+
+product = Test(vars(args))
+product.process()
+exit()
+'''
+
 product : BaseSatType = None
 match args.type:
     case "gprox":

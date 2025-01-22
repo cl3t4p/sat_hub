@@ -1,6 +1,7 @@
 from sat_product.basesat import BaseSatType
 import os
-from shapely.geometry import Polygon, Point, box
+from shapely.geometry import box
+
 class BaseSat_GeoTiff(BaseSatType):
     
     def __init__(self, config):
@@ -8,6 +9,7 @@ class BaseSat_GeoTiff(BaseSatType):
         self.cache_folder = config["SETTINGS"]["CACHE_FOLDER"]
         
         # Check if the cache folder exists otherwise create it
+        self.cache_folder = f"{self.cache_folder}/{self.__class__.__name__}"
         if not os.path.exists(self.cache_folder):
             os.makedirs(self.cache_folder)
 
