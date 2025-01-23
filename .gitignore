@@ -13,3 +13,4 @@ Cargo.lock
 **/target/
 output/
 cache/
+key.json

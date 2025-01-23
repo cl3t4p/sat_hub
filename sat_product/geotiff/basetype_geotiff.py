@@ -24,22 +24,11 @@ class BaseSat_GeoTiff(BaseSatType):
         self.cord_bounding_box = box(self.NW_Long, self.SE_Lat, self.SE_Long, self.NW_Lat)
     
     
-    def process(self):
-        return super().process()
+    def write_geotiff(self):
+        return super().write_geotiff()
     
     @abstractmethod
     def extract_bandmatrix(self):
         pass
     
 
-    def tiff_to_png(input_file, output_file):
-        """
-        Converts a TIFF file to a PNG file.
-        Args:
-            input_file (str): Path to the input TIFF file.
-            output_file (str): Path to the output PNG file.
-        Returns:
-            None
-        """
-        image = Image.open(input_file)
-        image.save(output_file, "PNG")

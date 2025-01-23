@@ -3,6 +3,7 @@ from rasterio.windows import from_bounds
 from shapely import Polygon
 from rasterio.io import MemoryFile
 import os
+from PIL import Image
 
 # Set the environment variable to disable signing requests
 os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
@@ -48,7 +49,7 @@ def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon):
     # Write the colormap
     with rasterio.open(output_file, "r+") as src:
         src.write_colormap(1, color_map)
-        return src.transform, output_file.meta
+        return src.transform, src.meta
 
 
 def extract_boundingbox_into_matrix(geotiffs, bbox: Polygon):
@@ -90,3 +91,15 @@ def extract_boundingbox_into_matrix(geotiffs, bbox: Polygon):
 
         output_file = memfile.open()
         return output_file.read(), output_file.transform, output_file.meta
+    
+def tiff_to_png(input_file, output_file):
+    """
+    Converts a TIFF file to a PNG file.
+    Args:
+        input_file (str): Path to the input TIFF file.
+        output_file (str): Path to the output PNG file.
+    Returns:
+        None
+    """
+    image = Image.open(input_file)
+    image.save(output_file, "PNG")

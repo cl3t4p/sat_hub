@@ -33,14 +33,15 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
         self.geotiff_trasform = None
 
     
-    def process(self):
+    def write_geotiff(self,output_file=None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/output.tif"
         self.log.info("Processing ESA World Cover")
         # Get the tiles that intersect with the bounding box
         tile_names = self._get_tile_names()
         prefix = self._get_versionprefix()
-        output_file = f"{self.get_outfolder()}/output.tif"
         
-
+        
         geotiffs = []
         for tile in tile_names:
             key = f'{prefix}{tile}_Map.tif'

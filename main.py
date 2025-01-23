@@ -24,25 +24,31 @@ config.update(toml.load("config.toml"))
 
 
 match args.type:
+    case "gprox":
+        from sat_product.sentinel.gprox import GProx
+        product = GProx(vars(args))
+        product.write_geotiff()
     case "stype":
         from sat_product.sentinel.stype import SType
         product = SType(vars(args))
-        product.process()
+        product.write_geotiff()
     case "vis":
         from sat_product.sentinel.vis import Vis
         product = Vis(vars(args))
-        product.process()
+        product.write_geotiff()
     case "stemp":
         from sat_product.sentinel.stemp import STemp
         product = STemp(vars(args))
-        product.process()
+        product.write_geotiff()
     case "s3_esaworldcover":
         from sat_product.geotiff.s3.esaworldcover import S3_EsaWorldCover
+        import utils.geotiff.geotiff_lib as geotiff_lib
         product = S3_EsaWorldCover(vars(args))
-        product.process()
+        output_file = f"{product.get_outfolder()}/esaworldcover.tif"
+        product.write_geotiff(output_file)
+        geotiff_lib.tiff_to_png(output_file,f"{product.get_outfolder()}/esaworldcover.png")
     case "s3_gprox":
         from sat_product.geotiff.s3.esaworldcover import S3_EsaWorldCover,S3_GProx
-        import utils.geotiff.geotiff_lib as geotiff_lib
         product = S3_EsaWorldCover(vars(args))
         gprox = S3_GProx(product,vars(args))
         percentage_matrix = gprox.get_percentage_convolution_matrix()

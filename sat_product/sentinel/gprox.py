@@ -16,7 +16,7 @@ class GProx(SentinelBaseType):
         self.vegetationIndexRadius = round(float(args["meterRadius"]) / resolution)
         print(f"Output folder: {self.output_folder}")
         
-    def process(self):
+    def write_geotiff(self):
         request = self.get_request()
         print("Request sent")
         response = request.get_data(save_data=True)

@@ -3,8 +3,13 @@
 # Activate the virtual environment
 source .venv/bin/activate
 
-CLIENT_ID="your_client_id"
-CLIENT_SECRET="your_client_secret"
+
+# Define the client ID and secret
+config_file="key.json"
+
+# Parse the JSON using jq
+CLIENT_ID=$(jq -r '.CLIENT_ID' "$config_file")
+CLIENT_SECRET=$(jq -r '.CLIENT_SECRET' "$config_file")
 
 # Define the subcommand
 SUBCOMMAND=$1

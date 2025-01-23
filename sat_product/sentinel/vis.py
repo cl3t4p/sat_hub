@@ -16,12 +16,14 @@ class Vis(SentinelBaseType):
             ),
         ]
         
-    def process(self):
+    def write_geotiff(self):
         request = self.get_request()
-        print("Request sent")
-        response = request.get_data(save_data=True)
-        print("Request completed")
-        SentinelBaseType.extractImagesFromTar(self.output_folder)
+        
+        self.log.info("Requesting data")
+        response = request.get_data(save_data=False,show_progress=True)
+        self.log.info("Data received")
+        print(f"type of response: {type(response)}")
+        
     
     def get_evalscript(self):
         return """

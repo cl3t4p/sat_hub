@@ -9,14 +9,15 @@ class STemp(SentinelBaseType):
     def __init__(self, config):
         super().__init__(config)
     
-    def process(self):
+    def write_geotiff(self,output_file=None):
         request = self.get_request()
-        print("Request sent")
-        response = request.get_data(save_data=True,show_progress=True)
-        print("Request completed")
-        SentinelBaseType.extractImagesFromTar(self.output_folder)
-        with open(f"{self.output_folder}/response.tif", "wb") as f:
-            f.write(response[0])
+        
+        self.log.info("Requesting data")
+        response = request.get_data(save_data=False,show_progress=True)
+        self.log.info("Data received")
+        print(f"type of response: {type(response)}")
+        
+        
 
 
     def get_input_type(self):

@@ -113,7 +113,7 @@ class SentinelBaseType(BaseSatType):
     def get_response_type(self) -> list:
         return [
             SentinelHubRequest.output_response('default', MimeType.TIFF),
-            SentinelHubRequest.output_response('default', MimeType.JPG),
+            #SentinelHubRequest.output_response('default', MimeType.JPG),
         ]
 
     @abstractmethod
@@ -125,7 +125,7 @@ class SentinelBaseType(BaseSatType):
         pass
 
     @abstractmethod
-    def process(self):
+    def write_geotiff(self):
         pass
 
     @staticmethod

@@ -20,7 +20,7 @@ class BaseSatType(ABC):
         self.output_folder = self.__get_outfolder(config["output"])
     
     @abstractmethod
-    def process(self):
+    def write_geotiff(self):
         pass
 
     def get_outfolder(self) -> str:

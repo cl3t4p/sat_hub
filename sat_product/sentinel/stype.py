@@ -9,7 +9,7 @@ class SType(basetype_sent.SentinelBaseType):
     def __init__(self, args : dict):
         super().__init__(args)
     
-    def process(self):
+    def write_geotiff(self):
         request = self.get_request()
         print("Request sent")
         response = request.get_data(save_data=True,show_progress=True)
