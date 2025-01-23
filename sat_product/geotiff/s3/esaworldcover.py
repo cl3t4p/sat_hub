@@ -40,8 +40,6 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
         # Get the tiles that intersect with the bounding box
         tile_names = self._get_tile_names()
         prefix = self._get_versionprefix()
-        
-        
         geotiffs = []
         for tile in tile_names:
             key = f'{prefix}{tile}_Map.tif'
@@ -57,12 +55,23 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
                 self.s3cache.get(key, local_filename)
                 geotiffs.append(local_filename)
         
+        
         self.log.info("Extracting bounding box")
         self.geotiff_trasform,self.geotiff_meta = geotiff_lib.extract_boundingbox_into_tiff(geotiffs, output_file, self.bounding_box)
         self.log.info("Bounding box extracted to " + output_file)
             
         
     def extract_bandmatrix(self):
+        """
+        Extracts a band matrix from GeoTIFF files.
+        This method retrieves GeoTIFF files either from an S3 bucket or a local cache,
+        transforms them into a matrix, and returns the resulting matrix. It also sets
+        the GeoTIFF transformation and metadata attributes.
+        Returns:
+            numpy.ndarray: The extracted band matrix. Remember that this is a 3D array with shape (bands, rows, columns).
+        Raises:
+            Exception: If there is an error during the extraction process.
+        """
         self.log.info("Extracting band matrix")
         tile_names = self._get_tile_names()
         prefix = self._get_versionprefix()

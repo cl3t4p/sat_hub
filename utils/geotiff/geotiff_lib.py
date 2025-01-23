@@ -5,7 +5,7 @@ from rasterio.io import MemoryFile
 import os
 from PIL import Image
 
-# Set the environment variable to disable signing requests
+# Set the environment variable to disable signing requests for public S3 buckets
 os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
 
 
@@ -61,6 +61,7 @@ def extract_boundingbox_into_matrix(geotiffs, bbox: Polygon):
         np.array: The matrix containing the extracted bounding box.
         Affine: The transform of the output GeoTIFF file
     """
+    # Open a MemoryFile to store the output GeoTIFF as rasterio only works with files
     with MemoryFile() as memfile:
         for geotiff in geotiffs:
             
