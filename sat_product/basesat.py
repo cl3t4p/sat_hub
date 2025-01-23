@@ -2,10 +2,14 @@ from abc import ABC, abstractmethod
 import datetime
 from shapely.geometry import Point
 import os
+import logging
 
 class BaseSatType(ABC):
     
+    
+    
     def __init__(self, config: dict):
+        self.log = logging.getLogger(type(self).__name__)
         self.NW_point = Point(config["point1"])
         self.SE_point = Point(config["point2"])
         self.NW_Long = config["point1"][1]
@@ -19,7 +23,10 @@ class BaseSatType(ABC):
     def process(self):
         pass
 
-    def get_outfolder(self):
+    def get_outfolder(self) -> str:
+        """
+        Returns the output folder path if it exists, otherwise creates it.
+        """
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
         return self.output_folder

@@ -1,13 +1,20 @@
+from abc import abstractmethod
+from shapely import Polygon
 from sat_product.basesat import BaseSatType
 import os
 from shapely.geometry import box
+from PIL import Image
 
 class BaseSat_GeoTiff(BaseSatType):
-    
     def __init__(self, config):
         super().__init__(config)
         self.cache_folder = config["SETTINGS"]["CACHE_FOLDER"]
-        
+        self.bounding_box = Polygon([
+            (self.NW_Long, self.NW_Lat),
+            (self.NW_Long, self.SE_Lat),
+            (self.SE_Long, self.SE_Lat),
+            (self.SE_Long, self.NW_Lat)
+        ])
         # Check if the cache folder exists otherwise create it
         self.cache_folder = f"{self.cache_folder}/{self.__class__.__name__}"
         if not os.path.exists(self.cache_folder):
@@ -20,3 +27,19 @@ class BaseSat_GeoTiff(BaseSatType):
     def process(self):
         return super().process()
     
+    @abstractmethod
+    def extract_bandmatrix(self):
+        pass
+    
+
+    def tiff_to_png(input_file, output_file):
+        """
+        Converts a TIFF file to a PNG file.
+        Args:
+            input_file (str): Path to the input TIFF file.
+            output_file (str): Path to the output PNG file.
+        Returns:
+            None
+        """
+        image = Image.open(input_file)
+        image.save(output_file, "PNG")

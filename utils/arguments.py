@@ -7,7 +7,7 @@ def valid_date(s):
     except ValueError:
         raise argparse.ArgumentTypeError(f"Not a valid date: '{s}'.")
     
-def default_sentinelhub(subparser):
+def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('-id', '--client_id', type=str, required=True, help='Client ID')
     subparser.add_argument('-s', '--client_secret', type=str, required=True, help='Client Secret')
     subparser.add_argument('-sd', '--start_date', type=valid_date, required=True, help='Start date')
@@ -17,7 +17,10 @@ def default_sentinelhub(subparser):
     subparser.add_argument('--pixel_value', type=int, default=750, help='Pixel value for the long side of the area of interest (default: 750)')
     return subparser
 
-
+def initialize_s3_subparser(subparser):
+    subparser.add_argument('-v', '--version', type=int, required=True, help='Version of the ESA World Cover 1 (2020) or 2 (2021)')
+    subparser.add_argument('--disable_cache', action='store_true',default=False, help='Use cache')
+    
 def base_parser():
     """
     Creates and returns the argument parser for the sat_hub
@@ -27,33 +30,38 @@ def base_parser():
     parser.add_argument('-p2', '--point2', type=float, nargs=2, required=True, help='Second point (latitude and longitude)')
     parser.add_argument('-o', '--output', type=str, help="Output folder default is 'output/{type}_*date_time*' where *date_time* is a placeholder for the current date and time")
 
-    
 
-
-    #GProx specific options 
+    # Add subparsers
     subparsers = parser.add_subparsers(dest='type', help='Type of classification', required=True)
     
+ #   gprox_parser = subparsers.add_parser('gprox', help='Gprox specific options')
+ #   gprox_parser.add_argument('-mr', '--meterRadius', type=int, required=True, help='Meter radius for gprox')
+ #   default_sentinelhub(gprox_parser)
 
-    gprox_parser = subparsers.add_parser('gprox', help='Gprox specific options')
-    gprox_parser.add_argument('-mr', '--meterRadius', type=int, required=True, help='Meter radius for gprox')
-    default_sentinelhub(gprox_parser)
-
+ 
     #Stype specific options
     stype_parser = subparsers.add_parser('stype', help='Stype specific options')
-    default_sentinelhub(stype_parser)
+    initialize_sentinelhub_subparser(stype_parser)
 
     #Vis specific options
     vis_parser = subparsers.add_parser('vis', help='Vis specific options')
-    default_sentinelhub(vis_parser)
+    initialize_sentinelhub_subparser(vis_parser)
 
     #Stemp specific options
     stemp_parser = subparsers.add_parser('stemp', help='Stemp specific options')
-    default_sentinelhub(stemp_parser)
+    initialize_sentinelhub_subparser(stemp_parser)
 
+
+    #S3 Gprox specific options
+    gprox_parser = subparsers.add_parser('s3_gprox', help='Gprox specific options')
+    gprox_parser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
+    initialize_s3_subparser(gprox_parser)
     
     #S3 ESA World Cover specific options
     esa_s3_parser = subparsers.add_parser('s3_esaworldcover', help='S3 ESA World Cover specific options')
-    esa_s3_parser.add_argument('-v', '--version', type=int, required=True, help='Version of the ESA World Cover 1 (2020) or 2 (2021)')
+    initialize_s3_subparser(esa_s3_parser)
+    
+    
     return parser
 
 
@@ -72,7 +80,7 @@ def check_args(args):
         raise argparse.ArgumentTypeError(f"Cloud coverage must be between 0 and 100")
     
     #GProx specific checks
-    if args.type == 'gprox':
-        if args.meterRadius < 0:
+    if args.type == 'gprox' or args.type == 's3_gprox':
+        if args.meter_radius < 0:
             raise argparse.ArgumentTypeError(f"Meter radius must be positive")
     
