@@ -1,3 +1,6 @@
+from io import BytesIO
+
+import rasterio
 from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
 
@@ -7,7 +10,7 @@ class Vis(SentinelBaseType):
         
     
     
-    def get_input_type(self):
+    def _get_input_type(self):
         return [
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L1C,     
@@ -16,16 +19,49 @@ class Vis(SentinelBaseType):
             ),
         ]
         
-    def write_geotiff(self):
-        request = self.get_request()
-        
+    def write_geotiff(self,output_file:str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/output.tif"
+
         self.log.info("Requesting data")
-        response = request.get_data(save_data=False,show_progress=True)
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
         self.log.info("Data received")
-        print(f"type of response: {type(response)}")
         
-    
-    def get_evalscript(self):
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            with rasterio.open(output_file, "w", **profile) as dst:
+                _range = src.read().shape[0]
+                for i in range(1,_range+1):
+                    dst.write(src.read(i),i)
+
+
+    def extract_bandmatrix(self):
+        self.log.info("Requesting data")
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        self.log.info("Data received")
+        
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            return src.read()
+        
+
+    def _get_evalscript(self):
         return """
         //VERSION=3
 

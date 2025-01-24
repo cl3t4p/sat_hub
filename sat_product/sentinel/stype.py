@@ -1,49 +1,55 @@
 from . import basetype_sent
 from sentinelhub import SentinelHubRequest, DataCollection
-from utils.functions import extractImagesFromTar, convertImageTo4Colors
-from os import path
-from sat_img_processing import convert_image_to_4_colors
+from io import BytesIO
+import rasterio
 
 class SType(basetype_sent.SentinelBaseType):
     
     def __init__(self, args : dict):
         super().__init__(args)
     
-    def write_geotiff(self):
+    def write_geotiff(self,output_file:str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/output.tif"
+
+        self.log.info("Requesting data")
         request = self.get_request()
-        print("Request sent")
-        response = request.get_data(save_data=True,show_progress=True)
-        print("Request completed")
-
-        # Estrazione delle immagini dal file tar
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        self.log.info("Data received")
         
-        print("outputFolder: ", self.output_folder)
-        extractImagesFromTar(self.output_folder)
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            with rasterio.open(output_file, "w", **profile) as dst:
+                _range = src.read().shape[0]
+                for i in range(1,_range+1):
+                    dst.write(src.read(i),i)
+
+
+    def extract_bandmatrix(self):
+        self.log.info("Requesting data")
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        self.log.info("Data received")
         
-        
-        import time
-        # L'immagine jpg scaricata viene convertita in un'immagine a 4 colori
-        # Start timing the conversion process
-        start_time = time.time()
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            return src.read()
 
-        # Perform the conversion
-        convert_image_to_4_colors(path.join(self.output_folder, "extracted_contents", "default.jpg"), path.join(self.output_folder, "extracted_contents", "convertedDefault.tif"))
-
-        # End timing the conversion process
-        end_time = time.time()
-        print(f"Time taken for convertTIFFToRGB: {end_time - start_time} seconds")
-
-        # Start timing the conversion process
-        start_time = time.time()
-
-        # Perform the conversion
-        convertImageTo4Colors(path.join(self.output_folder, "extracted_contents", "default.jpg"), path.join(self.output_folder, "extracted_contents", "convertedDefaultOld.tif"))
-
-        # End timing the conversion process
-        end_time = time.time()
-        print(f"Time taken for convertImageTo4Colors: {end_time - start_time} seconds")
-
-    def get_input_type(self):
+    def _get_input_type(self):
          return [
                     SentinelHubRequest.input_data(
                         data_collection=DataCollection.SENTINEL2_L2A,     
@@ -55,7 +61,7 @@ class SType(basetype_sent.SentinelBaseType):
     
 
     
-    def get_evalscript(self) -> str:
+    def _get_evalscript(self) -> str:
         return """
         //VERSION=3
         function evaluatePixel(samples) {

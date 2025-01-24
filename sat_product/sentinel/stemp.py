@@ -3,24 +3,59 @@ from sentinelhub import (
     SentinelHubRequest,
     DataCollection
 )
+import rasterio
+from io import BytesIO
 
 
 class STemp(SentinelBaseType):
     def __init__(self, config):
         super().__init__(config)
     
-    def write_geotiff(self,output_file=None):
-        request = self.get_request()
-        
+    def write_geotiff(self,output_file:str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/output.tif"
+
         self.log.info("Requesting data")
-        response = request.get_data(save_data=False,show_progress=True)
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
         self.log.info("Data received")
-        print(f"type of response: {type(response)}")
+        
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            with rasterio.open(output_file, "w", **profile) as dst:
+                _range = src.read().shape[0]
+                for i in range(1,_range+1):
+                    dst.write(src.read(i),i)
+
+
+    def extract_bandmatrix(self):
+        self.log.info("Requesting data")
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        self.log.info("Data received")
+        
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            return src.read()
         
         
 
 
-    def get_input_type(self):
+    def _get_input_type(self):
         return [
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL3_SLSTR,
@@ -36,7 +71,7 @@ class STemp(SentinelBaseType):
             ),
         ]
 
-    def get_evalscript(self):
+    def _get_evalscript(self):
         return """
             // VERSION 3
             /**

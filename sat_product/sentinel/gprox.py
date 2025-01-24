@@ -1,42 +1,58 @@
 from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
-import sat_img_processing
-import cv2
-import numpy as np
-import os
-from PIL import Image
+from io import BytesIO
+import rasterio
 
 class GProx(SentinelBaseType):
     
     def __init__(self, args : dict):
         super().__init__(args)
-        resolution = self.longSide / 750
-        # Il valore di metri di raggio sono i metri di raggio che l'utente vuole considerare per il calcolo dell'indice di prossimità di verde
-        # Dividendo i metri di raggio per la risoluzione si ottiene il raggio in pixel, che verrà utilizzato per il calcolo dell'indice di prossimità di verde
-        self.vegetationIndexRadius = round(float(args["meterRadius"]) / resolution)
-        print(f"Output folder: {self.output_folder}")
+        self.meter_radius = args["meter_radius"]
         
-    def write_geotiff(self):
+    def write_geotiff(self,output_file:str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/output.tif"
+
+        self.log.info("Requesting data")
         request = self.get_request()
-        print("Request sent")
-        response = request.get_data(save_data=True)
-        print("Request completed")
-        SentinelBaseType.extractImagesFromTar(self.output_folder)
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        self.log.info("Data received")
+        
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            with rasterio.open(output_file, "w", **profile) as dst:
+                _range = src.read().shape[0]
+                
+                for i in range(1,_range+1):
+                    dst.write(src.read(i),i)
+
+
+    def extract_bandmatrix(self):
+        self.log.info("Requesting data")
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        self.log.info("Data received")
+        
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            profile = src.profile
+            profile.update(
+                driver="GTiff",
+                count=4,
+                compress="lzw",
+                dtype=rasterio.uint8
+            )
+            return src.read()
         
         
-        
-        value_matrix = GProx.getValuesMatrix(self.output_folder + "/extracted_contents/default.tif")
-        percentage_matrix = sat_img_processing.get_percentage_matrix(value_matrix, self.vegetationIndexRadius)
-        
-        sat_img_processing.generate_image(percentage_matrix, self.output_folder + "/output.tif")
-        
-        os.rename(self.output_folder + "/extracted_contents/default.jpg", self.output_folder + "/extracted_contents/default1.jpg")
-        GProx.tiff2Jpg(self.output_folder + "/extracted_contents/default.tiff", self.output_folder+ "/extracted_contents/default.jpg")
-        
-        
-        
-        
-    def get_input_type(self):
+    def _get_input_type(self):
         return [
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L2A,     
@@ -45,37 +61,9 @@ class GProx(SentinelBaseType):
             ),
         ]
         
-    @staticmethod
-    def tiff2Jpg(inputPath, outputPath):
-        try:
-            # Apri l'immagine TIFF
-            with Image.open(inputPath) as img:
-                # Converti l'immagine in RGB (necessario per salvare come JPG)
-                img = img.convert("RGB")
-                # Salva l'immagine in formato JPG
-                img.save(outputPath, "JPEG")
-        except Exception as e:
-            print(f"Conversion error: {e}")
-        
-    @staticmethod
-    def getValuesMatrix(inputImagePath):
-        print(f"Reading image: {inputImagePath}")
-        image = cv2.imread(inputImagePath)
-        height, width, _ = image.shape
 
-        # La matrice viene inizializzata con tutti zeri
-        value_matrix = np.zeros((height, width), dtype=np.int32)
-
-        for y in range(height):
-            for x in range(width):
-                pixelColor = image[y, x]
-                # Verifica se il colore del pixel è nero (RGB: 0, 0, 0)
-                if np.array_equal(pixelColor, [0, 0, 0]):
-                    value_matrix[y][x] = 1
-
-        return value_matrix
     
-    def get_evalscript(self):
+    def _get_evalscript(self):
         return """
         //VERSION=3
         function evaluatePixel(samples) {

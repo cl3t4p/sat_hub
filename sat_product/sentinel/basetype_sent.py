@@ -8,26 +8,6 @@ import shutil
 
 
 class SentinelBaseType(BaseSatType):
-    """
-    BaseType is an abstract base class that provides a template for satellite data processing.
-    Attributes:
-        wgs84 (Geod): A Geod object for WGS84 ellipsoid.
-    Methods:
-        __init__(self, args: dict):
-            Initializes the BaseType object with configuration and geographical parameters.
-        get_request(self):
-            Creates and returns a SentinelHubRequest object based on the initialized parameters.
-        get_geo_cords(self):
-            Returns the geographical coordinates of the bounding box as a list of points.
-        get_outfolder(self, outfolder):
-            Generates and returns the output folder path, replacing "*unix_time*" with the current timestamp.
-        get_input_data(self) -> list:
-            Abstract method to be implemented by subclasses to provide input data for the request.
-        get_evalscript(self) -> str:
-            Abstract method to be implemented by subclasses to provide the evaluation script for the request.
-        process(self):
-            Abstract method to be implemented by subclasses to process the data.
-    """
 
     wgs84 = Geod(ellps="WGS84")
 
@@ -86,14 +66,14 @@ class SentinelBaseType(BaseSatType):
 
     def get_request(self) -> SentinelHubRequest:
         geometry = Geometry(
-            geometry={"coordinates": [self.get_geo_cords()], "type": "Polygon"},
+            geometry={"coordinates": [self.bounding_box], "type": "Polygon"},
             crs=CRS.WGS84,
         )
         request = SentinelHubRequest(
-            evalscript=self.get_evalscript(),
-            data_folder=self.output_folder,
-            input_data=self.get_input_type(),
-            responses=self.get_response_type(),
+            evalscript=self._get_evalscript(),
+            data_folder=self.get_outfolder(),
+            input_data=self._get_input_type(),
+            responses=self._get_response_type(),
             bbox=self.bbox,
             geometry=geometry,
             size=[self.horizontalSidePixel, self.verticalSidePixel],
@@ -101,31 +81,27 @@ class SentinelBaseType(BaseSatType):
         )
         return request
 
-    def get_geo_cords(self):
+    def _get_geo_cords(self):
         return [
-            [self.NW_Long, self.SE_Lat],
-            [self.NW_Long, self.NW_Lat],
-            [self.SE_Long, self.NW_Lat],
-            [self.SE_Long, self.SE_Lat],
-            [self.NW_Long, self.SE_Lat],
+            [self.bounding_box[0], self.bounding_box[1]],
+            [self.bounding_box[0], self.bounding_box[3]],
+            [self.bounding_box[2], self.bounding_box[3]],
+            [self.bounding_box[2], self.bounding_box[1]],
+            [self.bounding_box[0], self.bounding_box[1]],
         ]
         
-    def get_response_type(self) -> list:
+    def _get_response_type(self) -> list:
         return [
             SentinelHubRequest.output_response('default', MimeType.TIFF),
             #SentinelHubRequest.output_response('default', MimeType.JPG),
         ]
 
     @abstractmethod
-    def get_input_type(self) -> list:
+    def _get_input_type(self) -> list:
         pass
 
     @abstractmethod
-    def get_evalscript(self) -> str:
-        pass
-
-    @abstractmethod
-    def write_geotiff(self):
+    def _get_evalscript(self) -> str:
         pass
 
     @staticmethod

@@ -55,7 +55,7 @@ switch ($SUBCOMMAND) {
         python main.py `
             --point1 45.68685219444238 10.588434725123092 `
             --point2 45.42337178868138 10.981196017485841 `
-            stemp `
+            vis `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
             --start_date "2023-01-01" `
