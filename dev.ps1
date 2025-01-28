@@ -1,7 +1,28 @@
 # Activate the virtual environment
-& .\.venv\Scripts\Activate.ps1
+#Check if virtual environment exists
+if (-not (Test-Path ".venv")) {
+    Write-Host "Creating virtual environment..."
+    python -m venv .venv
+    & .venv\Scripts\Activate.ps1
+    pip install -r requirements.txt
+} else {
+    Write-Host "Activating virtual environment..."
+    & .venv\Scripts\Activate.ps1
+}
 
 
+# Create a default key.json file if it doesn't exist
+if (-not (Test-Path ".\key.json")) {
+    $defaultJson = @"
+{
+    "CLIENT_ID": "<YOUR_CLIENT_ID>",
+    "CLIENT_SECRET": "<YOUR_CLIENT_SECRET>"
+}
+"@
+    $defaultJson | Out-File -FilePath ".\key.json" -Encoding utf8
+    Write-Host "Default key.json file created. Please update it with your credentials."
+    exit 1
+}
 
 # Parse the JSON
 $config = Get-Content ".\key.json" | ConvertFrom-Json
@@ -68,6 +89,14 @@ switch ($SUBCOMMAND) {
             --point2 45.42337178868138 10.981196017485841 `
             s3_esaworldcover `
             --version 2
+    }
+    "s3_gprox" {
+        python main.py `
+            --point1 45.68685219444238 10.588434725123092 `
+            --point2 45.42337178868138 10.981196017485841 `
+            s3_gprox `
+            --version 2 `
+            --meter_radius 5
     }
     "clean" {
         Remove-Item output\* -Recurse -Force

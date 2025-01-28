@@ -12,6 +12,9 @@ from scipy import ndimage as ndimg
 from enum import Enum
 import utils.geotiff.geotiff_lib as geotiff_lib
 
+import sat_img_lib
+import time
+
 
 
 
@@ -217,12 +220,13 @@ class S3_GProx():
             represents the percentage of the target value within the specified radius around 
             the corresponding pixel.
         """
-        self.log.info("Calculating percentage matrix")
+
         target_value = esamapcode.code
         
         # Get the matrix from the product
         matrix = self.product.extract_bandmatrix()[0]
         
+        self.log.info("Calculating percentage matrix")
         # Create a circular kernel
         radius = self.meter_radius
         y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
@@ -233,20 +237,42 @@ class S3_GProx():
         target_matrix = (matrix == target_value).astype(float)
 
         # Convolve the target matrix with the kernel to count target_value occurrences
+        start_time = time.time()
+        
         target_counts = ndimg.convolve(target_matrix, circular_kernel, mode="constant", cval=0)
 
         # Convolve to count total valid cells
         total_cells = ndimg.convolve(np.ones_like(matrix, dtype=float), circular_kernel, mode="constant", cval=0)
 
         # Calculate percentage of target_value around each pixel
-        percentageMatrix = (
+        percentageMatrix_non_c_lib = (
             np.divide(
-                target_counts,
-                total_cells,
-                out=np.zeros_like(target_counts),
-                where=total_cells != 0,
+            target_counts,
+            total_cells,
+            out=np.zeros_like(target_counts),
+            where=total_cells != 0,
             )
             * 100
         )
+        
+        non_c_lib_time = time.time() - start_time
+        self.log.info(f"Non C library convolution time: {non_c_lib_time} seconds")
+
+        start_time = time.time()
+        
+        target_matrix_list = target_matrix.tolist()
+        circular_kernel_list = circular_kernel.tolist()
+        percentageMatrix_c_lib = sat_img_lib.binary_convolve(target_matrix_list, circular_kernel_list)
+        # Convert the list to a numpy array
+        percentageMatrix_c_lib = np.array(percentageMatrix_c_lib)
+        
+        c_lib_time = time.time() - start_time
+        self.log.info(f"C library convolution time: {c_lib_time} seconds")
+
+        # Check if the results are equal
+        if np.array_equal(percentageMatrix_non_c_lib, percentageMatrix_c_lib):
+            self.log.info("The results from both methods are equal.")
+        else:
+            self.log.warning("The results from both methods are NOT equal.")
         self.log.info("Percentage matrix calculated")
         return percentageMatrix
