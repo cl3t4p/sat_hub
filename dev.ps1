@@ -2,14 +2,11 @@
 #Check if virtual environment exists
 if (-not (Test-Path ".venv")) {
     Write-Host "Creating virtual environment..."
-    python -m venv .venv
-    & .venv\Scripts\Activate.ps1
-    pip install -r requirements.txt
+    python setup_env.py
 } else {
     Write-Host "Activating virtual environment..."
-    & .venv\Scripts\Activate.ps1
 }
-
+& .venv\Scripts\Activate.ps1
 
 # Create a default key.json file if it doesn't exist
 if (-not (Test-Path ".\key.json")) {
@@ -40,8 +37,8 @@ $args = $args[1..($args.Length - 1)]
 switch ($SUBCOMMAND) {
     "stype" {
         python main.py `
-            --point1 45.68685219444238 10.588434725123092 `
-            --point2 45.42337178868138 10.981196017485841 `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
             stype `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
@@ -51,8 +48,8 @@ switch ($SUBCOMMAND) {
     }
     "gprox" {
         python main.py `
-            --point1 45.68685219444238 10.588434725123092 `
-            --point2 45.42337178868138 10.981196017485841 `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
             gprox `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
@@ -63,8 +60,8 @@ switch ($SUBCOMMAND) {
     }
     "stemp" {
         python main.py `
-            --point1 45.68685219444238 10.588434725123092 `
-            --point2 45.42337178868138 10.981196017485841 `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
             stemp `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
@@ -74,8 +71,8 @@ switch ($SUBCOMMAND) {
     }
     "vis" {
         python main.py `
-            --point1 45.68685219444238 10.588434725123092 `
-            --point2 45.42337178868138 10.981196017485841 `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
             vis `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
@@ -85,18 +82,18 @@ switch ($SUBCOMMAND) {
     }
     "s3_esaworldcover" {
         python main.py `
-            --point1 45.68685219444238 10.588434725123092 `
-            --point2 45.42337178868138 10.981196017485841 `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
             s3_esaworldcover `
             --version 2
     }
     "s3_gprox" {
         python main.py `
-            --point1 45.68685219444238 10.588434725123092 `
-            --point2 45.42337178868138 10.981196017485841 `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
             s3_gprox `
             --version 2 `
-            --meter_radius 5
+            --meter_radius $args
     }
     "clean" {
         Remove-Item output\* -Recurse -Force
