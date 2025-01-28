@@ -8,11 +8,10 @@ import json
 from shapely.geometry import Polygon
 from utils.geotiff import simplecache
 import numpy as np
-from scipy import ndimage as ndimg
+from scipy import signal as signal
 from enum import Enum
 import utils.geotiff.geotiff_lib as geotiff_lib
 
-import sat_img_lib
 import time
 
 
@@ -225,26 +224,36 @@ class S3_GProx():
         
         # Get the matrix from the product
         matrix = self.product.extract_bandmatrix()[0]
+        self.log.info("Starting percentage matrix calculation")
         
-        self.log.info("Calculating percentage matrix")
+        
         # Create a circular kernel
+        start_time = time.time()
         radius = self.meter_radius
         y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
-        
         circular_kernel = (x**2 + y**2 <= radius**2).astype(float)
-
-        # Create a binary matrix where 1 indicates the target value
-        target_matrix = (matrix == target_value).astype(float)
-
-        # Convolve the target matrix with the kernel to count target_value occurrences
-        start_time = time.time()
         
-        target_counts = ndimg.convolve(target_matrix, circular_kernel, mode="constant", cval=0)
+        self.log.info(f"Circular kernel creation time: {time.time() - start_time} seconds")
+        
+        start_time = time.time()
+        target_matrix = (matrix == target_value).astype(float)
+        self.log.info(f"Binary matrix creation time: {time.time() - start_time:.4f} seconds")
 
-        # Convolve to count total valid cells
-        total_cells = ndimg.convolve(np.ones_like(matrix, dtype=float), circular_kernel, mode="constant", cval=0)
+        # Convolve the target matrix with the kernel using FFT
+        start_time = time.time()
+        target_counts = signal.fftconvolve(target_matrix, circular_kernel, mode="same")
+        self.log.info(f"Target counts FFT convolution time: {time.time() - start_time:.4f} seconds")
+
+        # Convolve to count total valid cells using FFT
+        start_time = time.time()
+        total_cells = signal.fftconvolve(np.ones_like(matrix, dtype=float), circular_kernel, mode="same")
+        self.log.info(f"Total cells FFT convolution time: {time.time() - start_time:.4f} seconds")
+
+
+
 
         # Calculate percentage of target_value around each pixel
+        start_time = time.time()
         percentageMatrix_non_c_lib = (
             np.divide(
             target_counts,
@@ -254,25 +263,24 @@ class S3_GProx():
             )
             * 100
         )
-        
-        non_c_lib_time = time.time() - start_time
-        self.log.info(f"Non C library convolution time: {non_c_lib_time} seconds")
+        self.log.info(f"Percentage matrix calculation time (non C++ library): {time.time() - start_time} seconds")
 
+
+        """         
         start_time = time.time()
-        
         target_matrix_list = target_matrix.tolist()
         circular_kernel_list = circular_kernel.tolist()
         percentageMatrix_c_lib = sat_img_lib.binary_convolve(target_matrix_list, circular_kernel_list)
         # Convert the list to a numpy array
         percentageMatrix_c_lib = np.array(percentageMatrix_c_lib)
-        
-        c_lib_time = time.time() - start_time
-        self.log.info(f"C library convolution time: {c_lib_time} seconds")
+        self.log.info(f"Percentage matrix calculation time (C library): {time.time() - start_time} seconds")
 
         # Check if the results are equal
         if np.array_equal(percentageMatrix_non_c_lib, percentageMatrix_c_lib):
             self.log.info("The results from both methods are equal.")
         else:
             self.log.warning("The results from both methods are NOT equal.")
-        self.log.info("Percentage matrix calculated")
-        return percentageMatrix
+        self.log.info("Percentage matrix calculated
+         """
+        return percentageMatrix_non_c_lib
+    
