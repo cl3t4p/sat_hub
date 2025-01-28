@@ -31,12 +31,31 @@ $CLIENT_SECRET = $config.CLIENT_SECRET
 
 # Define the subcommand
 $SUBCOMMAND = $args[0]
-$args = $args[1..($args.Length - 1)]
+
+
+$args = $args[1..$args.Length]
+
+
+
+#TODO: Add the option --debug to enable debugging
+
 
 # Run the main Python script with arguments
 switch ($SUBCOMMAND) {
+    "rgb" {
+        python -m debugpy --wait-for-client --listen 5678 main.py `
+            --point1 45.68 10.58 `
+            --point2 45.42 10.98 `
+            rgb `
+            --client_id $CLIENT_ID `
+            --client_secret $CLIENT_SECRET `
+            --start_date "2023-01-01" `
+            --end_date "2023-12-31" `
+            --cloud_coverage 20 `
+            $args
+    }
     "stype" {
-        python main.py `
+        python -m debugpy --listen 5678 main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             stype `
@@ -44,10 +63,11 @@ switch ($SUBCOMMAND) {
             --client_secret $CLIENT_SECRET `
             --start_date "2023-01-01" `
             --end_date "2023-12-31" `
-            --cloud_coverage 20
+            --cloud_coverage 20 `
+            $args
     }
     "gprox" {
-        python main.py `
+        python -m debugpy --listen 5678 main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             gprox `
@@ -56,10 +76,11 @@ switch ($SUBCOMMAND) {
             --start_date "2023-01-01" `
             --end_date "2023-12-31" `
             --cloud_coverage 20 `
-            --meterRadius 1000
+            --meter_radius 1000 `
+            $args
     }
     "stemp" {
-        python main.py `
+        python -m debugpy --listen 5678 main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             stemp `
@@ -68,9 +89,10 @@ switch ($SUBCOMMAND) {
             --start_date "2023-01-01" `
             --end_date "2023-12-31" `
             --cloud_coverage 20 `
+            $args
     }
     "vis" {
-        python main.py `
+        python -m debugpy  --listen 5678 main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             vis `
@@ -79,16 +101,18 @@ switch ($SUBCOMMAND) {
             --start_date "2023-01-01" `
             --end_date "2023-12-31" `
             --cloud_coverage 20 `
+            $args
     }
     "s3_esaworldcover" {
-        python main.py `
+        python -m debugpy --listen 5678 main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_esaworldcover `
             --version 2
+            $args
     }
     "s3_gprox" {
-        python main.py `
+        python -m debugpy --listen 5678 main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_gprox `
