@@ -1,0 +1,3 @@
+-TODO Implement png,jpg,tiff options in the arguments
+-TODO Implement aws sentinel-2 download if possible
+-TODO Fix Resolution Sentinel-Hub
