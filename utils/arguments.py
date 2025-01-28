@@ -6,6 +6,15 @@ def valid_date(s):
         return datetime.strptime(s, "%Y-%m-%d")
     except ValueError:
         raise argparse.ArgumentTypeError(f"Not a valid date: '{s}'.")
+
+
+#TODO Ask if html should stay in the code
+def output_type(s):
+    valid_types = ['tiff', 'jpg', 'png','html']
+    if s not in valid_types:
+        raise argparse.ArgumentTypeError(f"Invalid output type: '{s}'. Valid types are {valid_types}.")
+    return s
+
     
 def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('-id', '--client_id', type=str, required=True, help='Client ID')
@@ -13,13 +22,15 @@ def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('-sd', '--start_date', type=valid_date, required=True, help='Start date')
     subparser.add_argument('-ed', '--end_date', type=valid_date, required=True, help='End date')
     subparser.add_argument('-c','--cloud_coverage', type=int, default=20, help='Cloud Coverage percentage (default: 20)')
-    subparser.add_argument('--html', action='store_true', help='Output html file')
-    subparser.add_argument('--pixel_value', type=int, default=750, help='Pixel value for the long side of the area of interest (default: 750)')
+    subparser.add_argument('--html', action='store_true', help='Output html file') # TODO: Ask if this should stay in the code
+    subparser.add_argument('-res','--resolution', type=int, help='Resolution in meters per pixel')
     return subparser
 
 def initialize_s3_subparser(subparser):
     subparser.add_argument('-v', '--version', type=int, required=True, help='Version of the ESA World Cover 1 (2020) or 2 (2021)')
     subparser.add_argument('--disable_cache', action='store_true',default=False, help='Use cache')
+    return subparser
+
     
 def base_parser():
     """
@@ -29,6 +40,8 @@ def base_parser():
     parser.add_argument('-p1', '--point1', type=float, nargs=2, required=True, help='First point (latitude and longitude)')
     parser.add_argument('-p2', '--point2', type=float, nargs=2, required=True, help='Second point (latitude and longitude)')
     parser.add_argument('-o', '--output', type=str, help="Output folder default is 'output/{type}_*date_time*' where *date_time* is a placeholder for the current date and time")
+    
+    parser.add_argument('--output_type', type=str, default='tiff', help='Output type (default: tiff)')
 
 
     # Add subparsers
@@ -38,6 +51,9 @@ def base_parser():
  #   gprox_parser.add_argument('-mr', '--meterRadius', type=int, required=True, help='Meter radius for gprox')
  #   default_sentinelhub(gprox_parser)
 
+    #RGB specific options
+    rgb_parser = subparsers.add_parser('rgb', help='RGB specific options')
+    initialize_sentinelhub_subparser(rgb_parser)
  
     #Stype specific options
     stype_parser = subparsers.add_parser('stype', help='Stype specific options')

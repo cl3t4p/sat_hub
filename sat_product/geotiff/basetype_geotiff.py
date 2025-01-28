@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from shapely import Polygon
 from sat_product.basesat import BaseSatType
 import os
 from shapely.geometry import box

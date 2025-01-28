@@ -22,6 +22,8 @@ config = vars(args)
 config.update(toml.load("config.toml"))
 
 
+
+
 match args.type:
     case "gprox":
         from sat_product.sentinel.gprox import GProx
@@ -34,6 +36,10 @@ match args.type:
     case "vis":
         from sat_product.sentinel.vis import Vis
         product = Vis(config)
+        product.write_geotiff()
+    case "rgb":
+        from sat_product.sentinel.rgb import RGB
+        product = RGB(config)
         product.write_geotiff()
     case "stemp":
         from sat_product.sentinel.stemp import STemp

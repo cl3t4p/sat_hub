@@ -11,7 +11,6 @@ import numpy as np
 from scipy import signal as signal
 from enum import Enum
 import utils.geotiff.geotiff_lib as geotiff_lib
-
 import time
 
 
@@ -33,6 +32,7 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
         self.use_cache = not config["disable_cache"]
         self.s3cache = simplecache.S3Cache(config["SETTINGS"]["CACHE_FOLDER"], S3_EsaWorldCover.bucket_name, 'eu-central-1')
         self.geotiff_trasform = None
+        self.geotiff_meta = None
 
     
     def write_geotiff(self,output_file=None):

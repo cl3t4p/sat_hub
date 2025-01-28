@@ -40,8 +40,6 @@ def main():
 
 
     # Build libs
-    # Enter in each lib folder and run the command: python setup.py btist_wheel
-    # Then do pip install .
     main_dir = os.getcwd()
     venv_dir = os.path.join(main_dir, venv_dir)
 

@@ -1,21 +1,21 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from io import BytesIO
+
+import rasterio
 from sat_product.basesat import BaseSatType
-from sentinelhub import SentinelHubRequest, MimeType, CRS, BBox, Geometry, SHConfig
-from pyproj import Geod
-import os
-import tarfile
-import shutil
+from sentinelhub import SentinelHubRequest, MimeType, CRS, Geometry, SHConfig
+import sentinelhub
 
 
 class SentinelBaseType(BaseSatType):
-
-    wgs84 = Geod(ellps="WGS84")
+    
+    max_resolution_allowed = 2500
 
     def __init__(self, config: dict):
         # Initialize the base class with the configuration parameters
         super().__init__(config)
         
-        # Auth configuration
+        # Auth configuration for Sentinel Hub
         self.config = SHConfig()
         self.config.sh_client_id = config["client_id"]
         self.config.sh_client_secret = config["client_secret"]
@@ -23,45 +23,79 @@ class SentinelBaseType(BaseSatType):
         # Time interval
         self.timeIntervalStart = config["start_date"]
         self.timeIntervalEnd = config["end_date"]
-
+        
         # Geographical parameters
-        self.maxCloudCoverage = config["cloud_coverage"]
-        pixel_value = config["pixel_value"]
+        self.cloud_coverage = config["cloud_coverage"]
+        
+        
+        self.sat_hub_bounding_box = sentinelhub.BBox(bbox=self.bounding_box.bounds, crs=CRS.WGS84)
+                
+        # Resolution stuff as Sentinel Hub poses a limit on the width and height of the bounding box (2500)
+        if "resolution" in config and config["resolution"] is not None:
+            self.resolution = config["resolution"]
+            self.sat_hub_bounding_box_size = sentinelhub.bbox_to_dimensions(self.sat_hub_bounding_box, self.resolution)
+            if self.sat_hub_bounding_box_size[0] > self.max_resolution_allowed or self.sat_hub_bounding_box_size[1] > self.max_resolution_allowed:
+                self.log.warning(f"Resolution {self.resolution} exceeds the maximum allowed size of {self.max_resolution_allowed}. Calculating new resolution based on the bounding box.")
+                self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.bounding_box.bounds)
+                self.log.warning(f"New resolution: {self.sat_hub_bounding_box_size}")
+        else:
+            # If resolution is not provided, calculate it based on the bounding box and the maximum allowed size
+            self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.bounding_box.bounds)
+        
+        print("\n Resolution: ", self.sat_hub_bounding_box_size)
+            
+        
+
+        # Calculate the bounding box size based on the resolution
+        #self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.bounding_box.bounds)
+        
+        
+
+    def __get_response(self):
+        self.log.info("Getting data from Sentinel Hub")
+        request = self.get_request()
+        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
+        return response
+
+    def write_geotiff(self, output_file: str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/output.tif"
+        response = self.__get_response()
+        
+        data_in_memory = BytesIO(response[0].content )
+        with rasterio.open(data_in_memory) as src:
+            data, meta = self.__default_rasterio_preprocess(src)
+            _range = data.shape[0]
+            
+            with rasterio.open(output_file, "w", **meta) as dst:
+                for i in range(1,_range+1):
+                    dst.write(src.read(i),i)
+    
+    
+    def extract_bandmatrix(self):
+        response = self.__get_response()
+        
+        data_in_memory = BytesIO(response[0].content)
+        with rasterio.open(data_in_memory) as src:
+            data, meta = self.__default_rasterio_preprocess(src)
+            return data
 
 
-        # Resolution calculation
-        # The dimensions in meters of the area of interest are calculated.
-        # The dimensions in pixels of the area of interest are calculated.
-        # The resolution is calculated (dimensions in meters / dimensions in pixels).
-        verticalSideMeter = SentinelBaseType.wgs84.inv(
-            self.NW_Long, self.NW_Lat, self.NW_Long, self.SE_Lat
-        )[2]
-        horizontalSideMeter = SentinelBaseType.wgs84.inv(
-            self.NW_Long, self.NW_Lat, self.SE_Long, self.NW_Lat
-        )[2]
-        self.longSide = max(verticalSideMeter, horizontalSideMeter)
-        self.shortSide = min(verticalSideMeter, horizontalSideMeter)
-        
-        
-        # The resolution is calculated based on the long side of the area of interest.
-        # pixel_value is the value of the long side of the area of interest in pixels default 750.
-        
-        # The long side of the area is assigned a value of 750 pixels, and the short side adjusts to maintain proportions.
-        # By changing the value of 750, the resolution of the image can be modified.
-        # In the case of gprox and small areas, it is recommended to use a lower value to avoid long waiting times.
-        #self.verticalSidePixel = verticalSideMeter * (pixel_value / longSide)
-        #self.horizontalSidePixel = horizontalSideMeter * (pixel_value / longSide)
-        
-        #self.resolution = longSide / pixel_value
-        
-        self.resolution = 20
+    def __default_rasterio_preprocess(self, geotiff):
+            self.geotiff_meta = geotiff.meta
+            self.geotiff_trasform = geotiff.transform
+            
+            data = geotiff.read()
+            out_meta = geotiff.meta.copy()
+            out_meta.update(
+                height= data.shape[1],
+                width= data.shape[2],
+                driver="GTiff",
+                count=data.shape[0],
+                dtype=rasterio.uint8
+            )
+            return data, out_meta
 
-        # Calculate the number of pixels for the vertical and horizontal sides
-        self.verticalSidePixel = verticalSideMeter / self.resolution
-        self.horizontalSidePixel = horizontalSideMeter / self.resolution
-        self.bbox = BBox(
-            bbox=[self.NW_Long, self.SE_Lat, self.SE_Long, self.NW_Lat], crs=CRS.WGS84
-        )
 
 
     def get_request(self) -> SentinelHubRequest:
@@ -74,27 +108,61 @@ class SentinelBaseType(BaseSatType):
             data_folder=self.get_outfolder(),
             input_data=self._get_input_type(),
             responses=self._get_response_type(),
-            bbox=self.bbox,
-            geometry=geometry,
-            size=[self.horizontalSidePixel, self.verticalSidePixel],
+            size=self.sat_hub_bounding_box_size,
+            bbox=self.sat_hub_bounding_box,
             config=self.config,
         )
         return request
 
-    def _get_geo_cords(self):
-        return [
-            [self.bounding_box[0], self.bounding_box[1]],
-            [self.bounding_box[0], self.bounding_box[3]],
-            [self.bounding_box[2], self.bounding_box[3]],
-            [self.bounding_box[2], self.bounding_box[1]],
-            [self.bounding_box[0], self.bounding_box[1]],
-        ]
+
+
+    def calculate_size_from_bbox(self,bounding_box):
+        """
+        Calculate the size (in pixels) from a given bounding box while ensuring it does not exceed the maximum limit.
+        bounding_box: List of [min_longitude, min_latitude, max_longitude, max_latitude]
+        Returns: Tuple (horizontal_size, vertical_size)
+        """
+        min_lon, min_lat, max_lon, max_lat = bounding_box
         
+        # Calculate the horizontal and vertical distances in degrees
+        horizontal_distance = max_lon - min_lon
+        vertical_distance = max_lat - min_lat
+        
+        # Define the maximum allowed size (2500)
+        max_size = self.max_resolution_allowed
+        
+        
+        
+        # Calculate the aspect ratio (width/height)
+        aspect_ratio = horizontal_distance / vertical_distance
+        
+        
+        
+        # Initialize horizontal and vertical sizes based on aspect ratio
+        if aspect_ratio >= 1:
+            horizontal_size = max_size
+            vertical_size = int(max_size / aspect_ratio)
+        else:
+            vertical_size = max_size
+            horizontal_size = int(max_size * aspect_ratio)
+        
+        # If either dimension exceeds max_size, scale the other dimension
+        if horizontal_size > max_size:
+            horizontal_size = max_size
+            vertical_size = int(horizontal_size / aspect_ratio)
+            
+        if vertical_size > max_size:
+            vertical_size = max_size
+            horizontal_size = int(vertical_size * aspect_ratio)
+        
+        return horizontal_size, vertical_size
+    
     def _get_response_type(self) -> list:
         return [
             SentinelHubRequest.output_response('default', MimeType.TIFF),
             #SentinelHubRequest.output_response('default', MimeType.JPG),
         ]
+    
 
     @abstractmethod
     def _get_input_type(self) -> list:
@@ -103,31 +171,3 @@ class SentinelBaseType(BaseSatType):
     @abstractmethod
     def _get_evalscript(self) -> str:
         pass
-
-    @staticmethod
-    def extractImagesFromTar(outputFolderPath : str):
-        print("Extracting images...")
-        
-        for subdir in os.listdir(outputFolderPath):
-            subdir_path = os.path.join(outputFolderPath, subdir)
-            if os.path.isdir(subdir_path):
-                if "response.tar" in os.listdir(subdir_path):
-                    tarPath = os.path.join(subdir_path, "response.tar")
-                    targetFolder = os.path.join(outputFolderPath, "extracted_contents")
-                    if not os.path.exists(targetFolder):
-                        os.makedirs(targetFolder)
-                    with tarfile.open(tarPath, 'r') as tar:
-                        tar.extractall(targetFolder)
-                    # Rimuovere la tar
-                    os.remove(tarPath)
-                    
-                    # Move the extracted contents to the target folder
-                    for item in os.listdir(subdir_path):
-                        s = os.path.join(subdir_path, item)
-                        d = os.path.join(outputFolderPath, item)
-                        shutil.move(s, d)
-                    
-                    # Remove the now empty extracted_contents folder
-                    os.rmdir(subdir_path)
-
-        print("Extraction completed")

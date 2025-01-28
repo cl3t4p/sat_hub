@@ -26,6 +26,8 @@ class BaseSatType(ABC):
             (self.SE_Long, self.SE_Lat),
             (self.SE_Long, self.NW_Lat)
         ])
+        self.geotiff_trasform = None
+        self.geotiff_meta = None
     
     @abstractmethod
     def write_geotiff(self,output_file:str = None):
@@ -82,3 +84,4 @@ class BaseSatType(ABC):
         else:
             className = type(self).__name__
             return f"output/{className}_{time}"
+    

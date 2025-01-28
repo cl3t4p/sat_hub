@@ -12,48 +12,11 @@ class STemp(SentinelBaseType):
         super().__init__(config)
     
     def write_geotiff(self,output_file:str = None):
-        if output_file is None:
-            output_file = f"{self.get_outfolder()}/output.tif"
-
-        self.log.info("Requesting data")
-        request = self.get_request()
-        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
-        self.log.info("Data received")
-        
-        data_in_memory = BytesIO(response[0].content )
-        with rasterio.open(data_in_memory) as src:
-            profile = src.profile
-            profile.update(
-                driver="GTiff",
-                count=4,
-                compress="lzw",
-                dtype=rasterio.uint8
-            )
-            with rasterio.open(output_file, "w", **profile) as dst:
-                _range = src.read().shape[0]
-                for i in range(1,_range+1):
-                    dst.write(src.read(i),i)
-
+        return super().write_geotiff(output_file)
 
     def extract_bandmatrix(self):
-        self.log.info("Requesting data")
-        request = self.get_request()
-        response = request.get_data(save_data=False,show_progress=True,decode_data=False)
-        self.log.info("Data received")
+        return super().extract_bandmatrix()
         
-        data_in_memory = BytesIO(response[0].content )
-        with rasterio.open(data_in_memory) as src:
-            profile = src.profile
-            profile.update(
-                driver="GTiff",
-                count=4,
-                compress="lzw",
-                dtype=rasterio.uint8
-            )
-            return src.read()
-        
-        
-
 
     def _get_input_type(self):
         return [
@@ -61,13 +24,13 @@ class STemp(SentinelBaseType):
                 data_collection=DataCollection.SENTINEL3_SLSTR,
                 identifier="S3SLSTR",
                 time_interval=(self.timeIntervalStart, self.timeIntervalEnd),
-                other_args={"dataFilter": {"maxCloudCoverage": self.maxCloudCoverage}},
+                other_args={"dataFilter": {"maxCloudCoverage": self.cloud_coverage}},
             ),
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL3_OLCI,
                 identifier="S3OLCI",
                 time_interval=(self.timeIntervalStart, self.timeIntervalEnd),
-                other_args={"dataFilter": {"maxCloudCoverage": self.maxCloudCoverage}},
+                other_args={"dataFilter": {"maxCloudCoverage": self.cloud_coverage}},
             ),
         ]
 
