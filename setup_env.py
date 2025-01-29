@@ -45,18 +45,21 @@ def main():
 
     print(f"venv_dir: {venv_dir}")
 
-    for folder in os.listdir("libs"):
-        if os.path.isdir(os.path.join("libs", folder)):
-            # If folder starts with _, skip it
-            if folder.startswith("_"):
-                continue
-            print(f"Building {folder}...")
-            # Enter the folder and run the command
-            os.chdir(os.path.join("libs", folder))
-            subprocess.run([os.path.join(venv_dir, "Scripts" if os.name == "nt" else "bin", "python"), "setup.py", "build"], check=True)
-            subprocess.run([os.path.join(venv_dir, "Scripts" if os.name == "nt" else "bin", "pip"), "install", "."], check=True)
-            print(f"{folder} built successfully!")
-            os.chdir(main_dir)
+    if os.path.exists("libs"):
+        for folder in os.listdir("libs"):
+            if os.path.isdir(os.path.join("libs", folder)):
+                # If folder starts with _, skip it
+                if folder.startswith("_"):
+                    continue
+                print(f"Building {folder}...")
+                # Enter the folder and run the command
+                os.chdir(os.path.join("libs", folder))
+                subprocess.run([os.path.join(venv_dir, "Scripts" if os.name == "nt" else "bin", "python"), "setup.py", "build"], check=True)
+                subprocess.run([os.path.join(venv_dir, "Scripts" if os.name == "nt" else "bin", "pip"), "install", "."], check=True)
+                print(f"{folder} built successfully!")
+                os.chdir(main_dir)
+    else:
+        print("No 'libs' directory found. Skipping building of libraries.")
     print("Setup complete. Happy coding!")
 
 if __name__ == "__main__":

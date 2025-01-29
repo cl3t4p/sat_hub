@@ -3,8 +3,10 @@ from io import BytesIO
 
 import rasterio
 from sat_product.basesat import BaseSatType
-from sentinelhub import SentinelHubRequest, MimeType, CRS, Geometry, SHConfig
+from sentinelhub import SentinelHubRequest, MimeType, CRS, SHConfig
+import sentinelhub.geo_utils as geo_utils
 import sentinelhub
+import math
 
 
 class SentinelBaseType(BaseSatType):
@@ -30,19 +32,17 @@ class SentinelBaseType(BaseSatType):
         
         self.sat_hub_bounding_box = sentinelhub.BBox(bbox=self.bounding_box.bounds, crs=CRS.WGS84)
                 
-        # Resolution stuff as Sentinel Hub poses a limit on the width and height of the bounding box (2500)
-        if "resolution" in config and config["resolution"] is not None:
-            self.resolution = config["resolution"]
-            self.sat_hub_bounding_box_size = sentinelhub.bbox_to_dimensions(self.sat_hub_bounding_box, self.resolution)
+        self.resolution = config.get("resolution",None)
+        if self.resolution is not None:
+            self.sat_hub_bounding_box_size= sentinelhub.bbox_to_dimensions(self.sat_hub_bounding_box, self.resolution)
             if self.sat_hub_bounding_box_size[0] > self.max_resolution_allowed or self.sat_hub_bounding_box_size[1] > self.max_resolution_allowed:
-                self.log.warning(f"Resolution {self.resolution} exceeds the maximum allowed size of {self.max_resolution_allowed}. Calculating new resolution based on the bounding box.")
-                self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.bounding_box.bounds)
-                self.log.warning(f"New resolution: {self.sat_hub_bounding_box_size}")
+                self.resolution = None
+                self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.sat_hub_bounding_box)
+                self.log.warning(f"Resolution is too high. Max resolution allowed is {self.max_resolution_allowed}, setting resolution to {self.resolution} based on bounding box size")
         else:
-            # If resolution is not provided, calculate it based on the bounding box and the maximum allowed size
-            self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.bounding_box.bounds)
-        
-        print("\n Resolution: ", self.sat_hub_bounding_box_size)
+            self.sat_hub_bounding_box_size = self.calculate_size_from_bbox(self.sat_hub_bounding_box)
+
+        self.log.info(f"Resolution: {self.resolution}, Bounding box size: {self.sat_hub_bounding_box_size}")
             
         
 
@@ -99,10 +99,6 @@ class SentinelBaseType(BaseSatType):
 
 
     def get_request(self) -> SentinelHubRequest:
-        geometry = Geometry(
-            geometry={"coordinates": [self.bounding_box], "type": "Polygon"},
-            crs=CRS.WGS84,
-        )
         request = SentinelHubRequest(
             evalscript=self._get_evalscript(),
             data_folder=self.get_outfolder(),
@@ -116,46 +112,33 @@ class SentinelBaseType(BaseSatType):
 
 
 
-    def calculate_size_from_bbox(self,bounding_box):
+    def calculate_size_from_bbox(self,bbox):
+        """Calculates width and height in pixels for a given bbox of a given pixel resolution (in meters). The result is
+        rounded to the nearest integers.
+
+        :param bbox: bounding box
+        :param resolution: Resolution of desired image in meters. It can be a single number or a tuple of two numbers -
+            resolution in horizontal and resolution in vertical direction.
+        :return: width and height in pixels for given bounding box and pixel resolution
         """
-        Calculate the size (in pixels) from a given bounding box while ensuring it does not exceed the maximum limit.
-        bounding_box: List of [min_longitude, min_latitude, max_longitude, max_latitude]
-        Returns: Tuple (horizontal_size, vertical_size)
-        """
-        min_lon, min_lat, max_lon, max_lat = bounding_box
+        if self.resolution is None:
+            self.resolution = 0
+        utm_bbox = geo_utils.to_utm_bbox(bbox)
+        east1, north1 = utm_bbox.lower_left
+        east2, north2 = utm_bbox.upper_right
+
+        delta_x = abs(east2 - east1)
+        delta_y = abs(north2 - north1)
+
+        if not self.resolution or self.resolution <= 0:
+            # find the minimal resolution that ensures max width/height <= 2500
+            self.resolution = max(delta_x / self.max_resolution_allowed, delta_y / self.max_resolution_allowed)
+            self.resolution = math.ceil(self.resolution)
+
+        width = int(round(delta_x / self.resolution))
+        height = int(round(delta_y / self.resolution))
+        return width, height
         
-        # Calculate the horizontal and vertical distances in degrees
-        horizontal_distance = max_lon - min_lon
-        vertical_distance = max_lat - min_lat
-        
-        # Define the maximum allowed size (2500)
-        max_size = self.max_resolution_allowed
-        
-        
-        
-        # Calculate the aspect ratio (width/height)
-        aspect_ratio = horizontal_distance / vertical_distance
-        
-        
-        
-        # Initialize horizontal and vertical sizes based on aspect ratio
-        if aspect_ratio >= 1:
-            horizontal_size = max_size
-            vertical_size = int(max_size / aspect_ratio)
-        else:
-            vertical_size = max_size
-            horizontal_size = int(max_size * aspect_ratio)
-        
-        # If either dimension exceeds max_size, scale the other dimension
-        if horizontal_size > max_size:
-            horizontal_size = max_size
-            vertical_size = int(horizontal_size / aspect_ratio)
-            
-        if vertical_size > max_size:
-            vertical_size = max_size
-            horizontal_size = int(vertical_size * aspect_ratio)
-        
-        return horizontal_size, vertical_size
     
     def _get_response_type(self) -> list:
         return [

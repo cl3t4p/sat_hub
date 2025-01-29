@@ -1,5 +1,5 @@
 # Activate the virtual environment
-#Check if virtual environment exists
+# Check if virtual environment exists
 if (-not (Test-Path ".venv")) {
     Write-Host "Creating virtual environment..."
     python setup_env.py
@@ -28,22 +28,25 @@ $config = Get-Content ".\key.json" | ConvertFrom-Json
 $CLIENT_ID = $config.CLIENT_ID
 $CLIENT_SECRET = $config.CLIENT_SECRET
 
-
 # Define the subcommand
 $SUBCOMMAND = $args[0]
 
-
 $args = $args[1..$args.Length]
 
-
-
-#TODO: Add the option --debug to enable debugging
-
+# Check if the --debug option is present
+$debugIndex = $args.IndexOf("--debug")
+if ($debugIndex -ne -1) {
+    # Remove the --debug option
+    $args = $args[0..($debugIndex - 1)] + $args[($debugIndex + 1)..$args.Length]
+    $startString = 'python -m debugpy --wait-for-client --listen 5678 main.py'
+} else {
+    $startString = 'python main.py'
+}
 
 # Run the main Python script with arguments
 switch ($SUBCOMMAND) {
     "rgb" {
-        python -m debugpy --wait-for-client --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             rgb `
@@ -55,7 +58,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "stype" {
-        python -m debugpy --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             stype `
@@ -67,7 +70,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "gprox" {
-        python -m debugpy --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             gprox `
@@ -80,7 +83,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "stemp" {
-        python -m debugpy --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             stemp `
@@ -92,7 +95,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "vis" {
-        python -m debugpy  --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             vis `
@@ -104,15 +107,15 @@ switch ($SUBCOMMAND) {
             $args
     }
     "s3_esaworldcover" {
-        python -m debugpy --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_esaworldcover `
-            --version 2
+            --version 2 `
             $args
     }
     "s3_gprox" {
-        python -m debugpy --listen 5678 main.py `
+        & $startString `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_gprox `
