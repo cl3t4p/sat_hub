@@ -46,7 +46,7 @@ if ($debugIndex -ne -1) {
 # Run the main Python script with arguments
 switch ($SUBCOMMAND) {
     "rgb" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             rgb `
@@ -58,7 +58,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "stype" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             stype `
@@ -70,7 +70,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "gprox" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             gprox `
@@ -83,7 +83,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "stemp" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             stemp `
@@ -95,7 +95,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "vis" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             vis `
@@ -107,7 +107,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "s3_esaworldcover" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_esaworldcover `
@@ -115,7 +115,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "s3_gprox" {
-        & $startString `
+        python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_gprox `

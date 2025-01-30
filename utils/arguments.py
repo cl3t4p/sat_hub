@@ -53,6 +53,7 @@ def base_parser():
 
     #RGB specific options
     rgb_parser = subparsers.add_parser('rgb', help='RGB specific options')
+    rgb_parser.add_argument('--brightness', type=float, default=2.5, help='Brightness factor (default: 2.5)')
     initialize_sentinelhub_subparser(rgb_parser)
  
     #Stype specific options

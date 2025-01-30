@@ -1,7 +1,5 @@
 from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
-from io import BytesIO
-import rasterio
 
 class GProx(SentinelBaseType):
     

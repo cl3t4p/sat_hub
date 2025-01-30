@@ -51,7 +51,7 @@ class SentinelBaseType(BaseSatType):
         
         
 
-    def __get_response(self):
+    def _get_response(self):
         self.log.info("Getting data from Sentinel Hub")
         request = self.get_request()
         response = request.get_data(save_data=False,show_progress=True,decode_data=False)
@@ -60,28 +60,28 @@ class SentinelBaseType(BaseSatType):
     def write_geotiff(self, output_file: str = None):
         if output_file is None:
             output_file = f"{self.get_outfolder()}/output.tif"
-        response = self.__get_response()
+        response = self._get_response()
         
         data_in_memory = BytesIO(response[0].content )
         with rasterio.open(data_in_memory) as src:
-            data, meta = self.__default_rasterio_preprocess(src)
+            data, meta = self._default_rasterio_preprocess(src)
             _range = data.shape[0]
             
             with rasterio.open(output_file, "w", **meta) as dst:
                 for i in range(1,_range+1):
-                    dst.write(src.read(i),i)
+                    dst.write(data[i-1],i)
     
     
     def extract_bandmatrix(self):
-        response = self.__get_response()
+        response = self._get_response()
         
         data_in_memory = BytesIO(response[0].content)
         with rasterio.open(data_in_memory) as src:
-            data, meta = self.__default_rasterio_preprocess(src)
+            data, meta = self._default_rasterio_preprocess(src)
             return data
 
 
-    def __default_rasterio_preprocess(self, geotiff):
+    def _default_rasterio_preprocess(self, geotiff):
             self.geotiff_meta = geotiff.meta
             self.geotiff_trasform = geotiff.transform
             
@@ -113,14 +113,20 @@ class SentinelBaseType(BaseSatType):
 
 
     def calculate_size_from_bbox(self,bbox):
-        """Calculates width and height in pixels for a given bbox of a given pixel resolution (in meters). The result is
-        rounded to the nearest integers.
-
-        :param bbox: bounding box
-        :param resolution: Resolution of desired image in meters. It can be a single number or a tuple of two numbers -
-            resolution in horizontal and resolution in vertical direction.
-        :return: width and height in pixels for given bounding box and pixel resolution
-        """
+        def calculate_size_from_bbox(self, bbox):
+            """
+            Calculate the width and height of a bounding box based on its resolution.
+            Parameters:
+            bbox (object): A bounding box object with attributes lower_left and upper_right, 
+                           which are tuples representing the coordinates (east, north).
+            Returns:
+            tuple: A tuple containing the width and height of the bounding box.
+            Notes:
+            - If the resolution is not set or is less than or equal to 0, the method calculates 
+              the minimal resolution that ensures the maximum width/height is less than or equal 
+              to 2500 units.
+            - The resolution is then used to calculate the width and height of the bounding box.
+            """
         if self.resolution is None:
             self.resolution = 0
         utm_bbox = geo_utils.to_utm_bbox(bbox)
