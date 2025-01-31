@@ -57,11 +57,11 @@ switch ($SUBCOMMAND) {
             --cloud_coverage 20 `
             $args
     }
-    "stype" {
+    "landcover" {
         python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
-            stype `
+            landcover `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
             --start_date "2023-01-01" `

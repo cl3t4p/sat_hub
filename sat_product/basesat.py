@@ -28,6 +28,7 @@ class BaseSatType(ABC):
         ])
         self.geotiff_trasform = None
         self.geotiff_meta = None
+        self.output_file = None
     
     @abstractmethod
     def write_geotiff(self,output_file:str = None):

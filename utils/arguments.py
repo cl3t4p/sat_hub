@@ -56,9 +56,9 @@ def base_parser():
     rgb_parser.add_argument('--brightness', type=float, default=2.5, help='Brightness factor (default: 2.5)')
     initialize_sentinelhub_subparser(rgb_parser)
  
-    #Stype specific options
-    stype_parser = subparsers.add_parser('stype', help='Stype specific options')
-    initialize_sentinelhub_subparser(stype_parser)
+    #Landcover specific options
+    landcover_parser = subparsers.add_parser('landcover', help='Landcover specific options')
+    initialize_sentinelhub_subparser(landcover_parser)
 
     #Vis specific options
     vis_parser = subparsers.add_parser('vis', help='Vis specific options')

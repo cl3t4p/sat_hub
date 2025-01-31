@@ -62,6 +62,8 @@ class SentinelBaseType(BaseSatType):
             output_file = f"{self.get_outfolder()}/output.tif"
         response = self._get_response()
         
+        self.output_file = output_file
+        
         data_in_memory = BytesIO(response[0].content )
         with rasterio.open(data_in_memory) as src:
             data, meta = self._default_rasterio_preprocess(src)

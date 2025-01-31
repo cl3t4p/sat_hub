@@ -29,9 +29,9 @@ match args.type:
         from sat_product.sentinel.gprox import GProx
         product = GProx(config)
         product.write_geotiff()
-    case "stype":
-        from sat_product.sentinel.landcover import SType
-        product = SType(config)
+    case "landcover":
+        from sat_product.sentinel.landcover import Landcover
+        product = Landcover(config)
         product.write_geotiff()
     case "vis":
         from sat_product.sentinel.vis import Vis

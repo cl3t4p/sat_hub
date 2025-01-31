@@ -49,7 +49,7 @@ class GProx(SentinelBaseType):
         function setup() {
             return {
                 input: ["B02", "B03", "B04", "B08", "B11", "dataMask"],
-                output: { bands: 4 }
+                output: { bands: 1 }
             };
         }
     """

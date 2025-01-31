@@ -31,6 +31,7 @@ function setup() {
     }
   }
 }
+// TODO Find better way to put map while using the evalscript
 
 const map = [
   [1, 0xe6004d],  //111 - Continuous urban fabric
