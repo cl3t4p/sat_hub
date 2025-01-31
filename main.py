@@ -30,7 +30,7 @@ match args.type:
         product = GProx(config)
         product.write_geotiff()
     case "stype":
-        from sat_product.sentinel.stype import SType
+        from sat_product.sentinel.landcover import SType
         product = SType(config)
         product.write_geotiff()
     case "vis":

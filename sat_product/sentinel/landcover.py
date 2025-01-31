@@ -1,7 +1,5 @@
 from . import basetype_sent
 from sentinelhub import SentinelHubRequest, DataCollection
-from io import BytesIO
-import rasterio
 
 class SType(basetype_sent.SentinelBaseType):
     

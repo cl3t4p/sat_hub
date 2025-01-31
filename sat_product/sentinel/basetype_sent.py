@@ -112,9 +112,8 @@ class SentinelBaseType(BaseSatType):
 
 
 
-    def calculate_size_from_bbox(self,bbox):
-        def calculate_size_from_bbox(self, bbox):
-            """
+    def calculate_size_from_bbox(self, bbox):
+        """
             Calculate the width and height of a bounding box based on its resolution.
             Parameters:
             bbox (object): A bounding box object with attributes lower_left and upper_right, 
@@ -126,7 +125,7 @@ class SentinelBaseType(BaseSatType):
               the minimal resolution that ensures the maximum width/height is less than or equal 
               to 2500 units.
             - The resolution is then used to calculate the width and height of the bounding box.
-            """
+        """
         if self.resolution is None:
             self.resolution = 0
         utm_bbox = geo_utils.to_utm_bbox(bbox)
