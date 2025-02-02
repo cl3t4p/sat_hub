@@ -1,7 +1,7 @@
 from enum import Enum
-from products.sentinel.basetype_sent import SentinelBaseType
+from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
-import utils.geotiff.geotiff_lib as geotiff_lib
+import sat_hub_lib.utils.geotiff_lib as geotiff_lib
 
 
 class SAT_LANDCOVER_MAPCODE(Enum):

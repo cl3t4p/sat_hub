@@ -1,13 +1,13 @@
 import botocore.client
-from products.geotiff.basetype_geotiff import BaseSat_GeoTiff
+from sat_hub_lib.geotiff.basetype_geotiff import BaseSat_GeoTiff
 import boto3
 import botocore
 import json
 from shapely.geometry import Polygon
-from utils.geotiff import simplecache
+from sat_hub_lib.utils import simplecache
 from scipy import signal as signal
 from enum import Enum
-import utils.geotiff.geotiff_lib as geotiff_lib
+import sat_hub_lib.utils.geotiff_lib as geotiff_lib
 
 
 class ESAWC_MAPCODE(Enum):
@@ -62,7 +62,7 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
         self.version = config["version"]
         self.use_cache = not config["disable_cache"]
         self.s3cache = simplecache.S3Cache(
-            config["SETTINGS"]["CACHE_FOLDER"],
+            self.cache_folder,
             S3_EsaWorldCover.bucket_name,
             "eu-central-1",
         )

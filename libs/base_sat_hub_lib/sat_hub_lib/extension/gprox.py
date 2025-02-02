@@ -1,7 +1,7 @@
 import numpy as np
 import rasterio
 from scipy import signal
-from products.baseproducts import BaseProduct, BaseSatType
+from sat_hub_lib.baseproducts import BaseSatType, BaseProduct
 
 
 class GProx(BaseProduct):

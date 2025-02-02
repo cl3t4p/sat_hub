@@ -1,13 +1,13 @@
 from abc import abstractmethod
-from products.baseproducts import BaseSatType
+
 import os
 from shapely.geometry import box
-
+from sat_hub_lib.baseproducts import BaseSatType
 
 class BaseSat_GeoTiff(BaseSatType):
     def __init__(self, config):
         super().__init__(config)
-        self.cache_folder = config["SETTINGS"]["CACHE_FOLDER"]
+        self.cache_folder = config["cache_folder"]
 
         # Check if the cache folder exists otherwise create it
         self.cache_folder = f"{self.cache_folder}/{self.__class__.__name__}"
