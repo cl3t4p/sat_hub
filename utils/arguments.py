@@ -21,9 +21,9 @@ def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('-s', '--client_secret', type=str, required=True, help='Client Secret')
     subparser.add_argument('-sd', '--start_date', type=valid_date, required=True, help='Start date')
     subparser.add_argument('-ed', '--end_date', type=valid_date, required=True, help='End date')
-    subparser.add_argument('-c','--cloud_coverage', type=int, default=20, help='Cloud Coverage percentage (default: 20)')
+    subparser.add_argument('-cc','--cloud_coverage', type=int, default=20, help='Cloud Coverage percentage (default: 20)')
     subparser.add_argument('--html', action='store_true', help='Output html file') # TODO: Ask if this should stay in the code
-    subparser.add_argument('-res','--resolution', type=int, help='Resolution in meters per pixel')
+    subparser.add_argument('--resolution', type=int, help='Resolution in meters per pixel')
     return subparser
 
 def initialize_s3_subparser(subparser):
