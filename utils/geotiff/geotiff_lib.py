@@ -9,7 +9,7 @@ from PIL import Image
 os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
 
 
-def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon):
+def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon,color_map = None):
     """
     Extracts a bounding box from a list of TIFF files or rasterio DatasetReader objects and saves the result to a new GeoTIFF file.
         tiff_files (list): List of (paths to the input TIFF files | list of s3 urls)
@@ -118,4 +118,4 @@ def apply_colormap(input_file,color_map : dict,band = 1):
         None
     """
     with rasterio.open(input_file, "r+") as src:
-        src.write_colormap(1, color_map)
+        src.write_colormap(band, color_map)

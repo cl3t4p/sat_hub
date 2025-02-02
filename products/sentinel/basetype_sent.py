@@ -2,7 +2,7 @@ from abc import abstractmethod
 from io import BytesIO
 
 import rasterio
-from sat_product.basesat import BaseSatType
+from products.baseproducts import BaseSatType
 from sentinelhub import SentinelHubRequest, MimeType, CRS, SHConfig
 import sentinelhub.geo_utils as geo_utils
 import sentinelhub

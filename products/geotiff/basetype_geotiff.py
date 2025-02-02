@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from sat_product.basesat import BaseSatType
+from products.baseproducts import BaseSatType
 import os
 from shapely.geometry import box
 
