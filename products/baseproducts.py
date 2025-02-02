@@ -5,16 +5,16 @@ from shapely import Polygon
 from shapely.geometry import Point
 import logging
 
+
 class BaseProduct(ABC):
-    
+
     def __init__(self, config: dict):
         self.__output_folder = self.__get_outfolder(config["output"])
+        self.output_file = None
         self.log = logging.getLogger(type(self).__name__)
-        
-        
-        
+
     @abstractmethod
-    def write_geotiff(self,output_file:str = None):
+    def write_geotiff(self, output_file: str = None):
         """
         Abstract method to write the data to a GeoTIFF file.
 
@@ -25,7 +25,7 @@ class BaseProduct(ABC):
         NotImplementedError: This method must be overridden in a subclass.
         """
         pass
-    
+
     @abstractmethod
     def extract_bandmatrix(self):
         """
@@ -38,7 +38,7 @@ class BaseProduct(ABC):
         NotImplementedError: This method must be overridden in a subclass.
         """
         pass
-    
+
     def __get_outfolder(self, outfolder):
         """
         Generates an output folder path based on the provided template or class name.
@@ -59,20 +59,18 @@ class BaseProduct(ABC):
         else:
             className = type(self).__name__
             return f"output/{className}_{time}"
-    
-    
-    def get_outfolder(self) -> str:
+
+    def get_outfolder(self, no_create=True) -> str:
         """
         Returns the output folder path if it exists, otherwise creates it.
         """
-        if not os.path.exists(self.__output_folder):
+        if not os.path.exists(self.__output_folder) and no_create:
             os.makedirs(self.__output_folder)
         return self.__output_folder
 
+
 class BaseSatType(BaseProduct):
-    
-    
-    
+
     def __init__(self, config: dict):
         super().__init__(config)
         self.NW_point = Point(config["point1"])
@@ -82,14 +80,15 @@ class BaseSatType(BaseProduct):
         self.SE_Long = config["point2"][1]
         self.SE_Lat = config["point2"][0]
         # Output folder
-        
-        self.bounding_box = Polygon([
-            (self.NW_Long, self.NW_Lat),
-            (self.NW_Long, self.SE_Lat),
-            (self.SE_Long, self.SE_Lat),
-            (self.SE_Long, self.NW_Lat)
-        ])
+
+        self.bounding_box = Polygon(
+            [
+                (self.NW_Long, self.NW_Lat),
+                (self.NW_Long, self.SE_Lat),
+                (self.SE_Long, self.SE_Lat),
+                (self.SE_Long, self.NW_Lat),
+            ]
+        )
         self.geotiff_trasform = None
         self.geotiff_meta = None
         self.output_file = None
-

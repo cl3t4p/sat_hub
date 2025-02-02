@@ -4,18 +4,19 @@ from scipy import signal
 from products.baseproducts import BaseProduct, BaseSatType
 
 
-
 class GProx(BaseProduct):
-    
-    def __init__(self, product : BaseSatType,config,value_to_map : int):
+
+    def __init__(self, product: BaseSatType, config, value_to_map: int):
         super().__init__(config)
         self.meter_radius = config["meter_radius"]
         self.product = product
         self.matrix = None
         self.value_to_map = value_to_map
-        
-        
-    def write_geotiff(self, output_file : str = None ):
+
+    def write_geotiff(self, output_file: str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/gprox.tif"
+
         matrix = self.extract_bandmatrix()
         self.log.info("Writing matrix to GeoTIFF at " + output_file)
         with rasterio.open(output_file, "w", **self.product.geotiff_meta) as dst:
@@ -37,7 +38,6 @@ class GProx(BaseProduct):
         with rasterio.open(output_file, "r+") as src:
             src.write_colormap(1, color_map)
         self.log.info("Matrix written to GeoTIFF at " + output_file)
-        
 
     def extract_bandmatrix(self):
         """
@@ -54,11 +54,11 @@ class GProx(BaseProduct):
         """
 
         target_value = self.value_to_map
-        
+
         # Get the matrix from the self.product
         matrix = self.product.extract_bandmatrix()[0]
         self.log.info("Starting percentage matrix calculation")
-        
+
         # Create a circular kernel
         radius = self.meter_radius
         y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
@@ -70,18 +70,21 @@ class GProx(BaseProduct):
         target_counts = signal.fftconvolve(target_matrix, circular_kernel, mode="same")
 
         # Convolve to count total valid cells using FFT
-        total_cells = signal.fftconvolve(np.ones_like(matrix, dtype=float), circular_kernel, mode="same")
-
+        total_cells = signal.fftconvolve(
+            np.ones_like(matrix, dtype=float), circular_kernel, mode="same"
+        )
 
         # Calculate percentage of target_value around each pixel
         percentageMatrix = (
             np.divide(
-            target_counts,
-            total_cells,
-            out=np.zeros_like(target_counts),
-            where=total_cells != 0,
+                target_counts,
+                total_cells,
+                out=np.zeros_like(target_counts),
+                where=total_cells != 0,
             )
             * 100
         )
-        self.log.info(f"Percentage matrix calculated with shape {percentageMatrix.shape}")
+        self.log.info(
+            f"Percentage matrix calculated with shape {percentageMatrix.shape}"
+        )
         return percentageMatrix

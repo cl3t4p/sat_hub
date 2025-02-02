@@ -45,16 +45,17 @@ if ($debugIndex -ne -1) {
 
 # Run the main Python script with arguments
 switch ($SUBCOMMAND) {
-    "rgb" {
+    "sentinel_gprox" {
         python main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
-            rgb `
+            sentinel_gprox `
             --client_id $CLIENT_ID `
             --client_secret $CLIENT_SECRET `
             --start_date "2023-01-01" `
             --end_date "2023-12-31" `
             --cloud_coverage 20 `
+            --meter_radius 1000 `
             $args
     }
     "landcover" {
@@ -107,7 +108,7 @@ switch ($SUBCOMMAND) {
             $args
     }
     "s3_esaworldcover" {
-        python main.py `
+        python  main.py `
             --point1 45.68 10.58 `
             --point2 45.42 10.98 `
             s3_esaworldcover `

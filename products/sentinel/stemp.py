@@ -1,22 +1,10 @@
 from .basetype_sent import SentinelBaseType
-from sentinelhub import (
-    SentinelHubRequest,
-    DataCollection
-)
-import rasterio
-from io import BytesIO
+from sentinelhub import SentinelHubRequest, DataCollection
 
 
 class STemp(SentinelBaseType):
     def __init__(self, config):
         super().__init__(config)
-    
-    def write_geotiff(self,output_file:str = None):
-        return super().write_geotiff(output_file)
-
-    def extract_bandmatrix(self):
-        return super().extract_bandmatrix()
-        
 
     def _get_input_type(self):
         return [

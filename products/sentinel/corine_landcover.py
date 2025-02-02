@@ -4,9 +4,8 @@ from sentinelhub import SentinelHubRequest, DataCollection
 
 class CorineLandCover(SentinelBaseType):
 
-    def __init__(self, args : dict):
+    def __init__(self, args: dict):
         super().__init__(args)
-
 
     def _get_input_type(self):
         return [
@@ -17,9 +16,10 @@ class CorineLandCover(SentinelBaseType):
             ),
         ]
 
-    
     def _get_evalscript(self):
-        return 
+        return
+
+
 """
 //VERSION=3
 function setup() {

@@ -1,29 +1,20 @@
 from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
 
+
 class Vis(SentinelBaseType):
-    def __init__(self, args : dict):
+    def __init__(self, args: dict):
         super().__init__(args)
-        
-    
-    
+
     def _get_input_type(self):
         return [
             SentinelHubRequest.input_data(
-                data_collection=DataCollection.SENTINEL2_L1C,     
+                data_collection=DataCollection.SENTINEL2_L1C,
                 time_interval=(self.timeIntervalStart, self.timeIntervalEnd),
-                other_args={"dataFilter": {"maxCloudCoverage": self.cloud_coverage}}
+                other_args={"dataFilter": {"maxCloudCoverage": self.cloud_coverage}},
             ),
         ]
-        
-    def write_geotiff(self,output_file:str = None):
-        return super().write_geotiff(output_file)
 
-
-    def extract_bandmatrix(self):
-        return super().extract_bandmatrix()
-        
-    
     def _get_default_resolution(self):
         return 20
 

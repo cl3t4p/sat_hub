@@ -61,11 +61,11 @@ case "$SUBCOMMAND" in
             --cloud_coverage 20 \
             "${ARGS[@]}"
         ;;
-    "gprox")
+    "sentinel_gprox")
         $START_STRING \
             --point1 45.68 10.58 \
             --point2 45.42 10.98 \
-            gprox \
+            sentinel_gprox \
             --client_id "$CLIENT_ID" \
             --client_secret "$CLIENT_SECRET" \
             --start_date "2023-01-01" \

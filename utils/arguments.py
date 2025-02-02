@@ -46,10 +46,6 @@ def base_parser():
 
     # Add subparsers
     subparsers = parser.add_subparsers(dest='type', help='Type of classification', required=True)
-    
- #   gprox_parser = subparsers.add_parser('gprox', help='Gprox specific options')
- #   gprox_parser.add_argument('-mr', '--meterRadius', type=int, required=True, help='Meter radius for gprox')
- #   default_sentinelhub(gprox_parser)
 
     #RGB specific options
     rgb_parser = subparsers.add_parser('rgb', help='RGB specific options')
@@ -68,6 +64,10 @@ def base_parser():
     stemp_parser = subparsers.add_parser('stemp', help='Stemp specific options')
     initialize_sentinelhub_subparser(stemp_parser)
 
+    # Sentinel GProx specific options
+    sent_gprox_parser = subparsers.add_parser('sentinel_gprox', help='Sentinel GProx specific options')
+    sent_gprox_parser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
+    initialize_sentinelhub_subparser(sent_gprox_parser)
 
     #S3 Gprox specific options
     gprox_parser = subparsers.add_parser('s3_gprox', help='Gprox specific options')

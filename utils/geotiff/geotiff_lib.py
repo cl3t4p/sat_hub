@@ -9,7 +9,7 @@ from PIL import Image
 os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
 
 
-def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon,color_map = None):
+def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon):
     """
     Extracts a bounding box from a list of TIFF files or rasterio DatasetReader objects and saves the result to a new GeoTIFF file.
         tiff_files (list): List of (paths to the input TIFF files | list of s3 urls)
@@ -18,14 +18,9 @@ def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon,c
     Returns:
         Affine: The transform of the output GeoTIFF file
     """
-    color_map = None
     for geotiff_str in geotiff_uri:
         # Check if the input is a path to a file or a rasterio DatasetReader object
         with rasterio.open(geotiff_str, "r") as geotiff:
-            # Get the colormap from the first file
-            if color_map is None:
-                color_map = geotiff.colormap(1)
-
             # Calculate the window to read the subset
             window = from_bounds(*bbox.bounds, transform=geotiff.transform)
             # Read the subset
@@ -46,9 +41,8 @@ def extract_boundingbox_into_tiff(geotiff_uri, output_file: str, bbox: Polygon,c
             # Save the subset to a new GeoTIFF
             with rasterio.open(output_file, "w", **out_meta) as dest:
                 dest.write(subset)
-    # Write the colormap
+    # Return the transform of the output GeoTIFF
     with rasterio.open(output_file, "r+") as src:
-        src.write_colormap(1, color_map)
         return src.transform, src.meta
 
 
@@ -64,7 +58,7 @@ def extract_boundingbox_into_matrix(geotiffs, bbox: Polygon):
     # Open a MemoryFile to store the output GeoTIFF as rasterio only works with files
     with MemoryFile() as memfile:
         for geotiff in geotiffs:
-            
+
             # Check if to get it from the cache or download it
             if type(geotiff) == str:
                 geotiff = rasterio.open(geotiff, "r")
@@ -92,7 +86,8 @@ def extract_boundingbox_into_matrix(geotiffs, bbox: Polygon):
 
         output_file = memfile.open()
         return output_file.read(), output_file.transform, output_file.meta
-    
+
+
 def tiff_to_png(input_file, output_file):
     """
     Converts a TIFF file to a PNG file.
@@ -106,10 +101,10 @@ def tiff_to_png(input_file, output_file):
     image.save(output_file, "PNG")
 
 
-def apply_colormap(input_file,color_map : dict,band = 1):
+def apply_colormap(input_file, color_map: dict, band=1):
     """
     Applies a color map to a band in a GeoTIFF file.
-    
+
     Args:
         input_file (str): Path to the input GeoTIFF file.
         color_map (dict): A dictionary mapping pixel values to RGB colors.

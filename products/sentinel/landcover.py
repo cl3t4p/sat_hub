@@ -1,47 +1,61 @@
-import rasterio
-from . import basetype_sent
+from enum import Enum
+from products.sentinel.basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
 import utils.geotiff.geotiff_lib as geotiff_lib
 
-class Landcover(basetype_sent.SentinelBaseType):
-    
-    COLOR_MAP = {
-    0: (255, 0, 0, 255),       # Buildings - Red
-    1: (0, 0, 255, 255),       # Water - Blue
-    2: (0, 100, 0, 255),       # Trees - Dark Green
-    3: (154, 205, 50, 255),    # Grass - Yellow Green
-    4: (255, 215, 0, 255),     # Agriculture - Gold
-    5: (139, 69, 19, 255),     # Mountains - Brown
-    6: (210, 180, 140, 255)    # Other - Tan
-  }
 
-    
-    def __init__(self, args : dict):
+class SAT_LANDCOVER_MAPCODE(Enum):
+    BUILDINGS = 0, (255, 0, 0, 255)
+    WATER = 1, (0, 0, 255, 255)
+    TREES = 2, (0, 100, 0, 255)
+    GRASS = 3, (154, 205, 50, 255)
+    AGRICULTURE = 4, (255, 215, 0, 255)
+    MOUNTAINS = 5, (139, 69, 19, 255)
+    OTHER = 6, (210, 180, 140, 255)
+
+    def __init__(self, code, color):
+        self.code = code
+        self.color = color
+
+    @staticmethod
+    def get_color_map():
+        color_map = {}
+        for item in SAT_LANDCOVER_MAPCODE:
+            color_map[item.code] = item.color
+        return color_map
+
+    @staticmethod
+    def get_color(code):
+        for item in SAT_LANDCOVER_MAPCODE:
+            if item.code == code:
+                return item.color
+        return (0, 0, 0, 255)
+
+
+class Landcover(SentinelBaseType):
+
+    def __init__(self, args: dict):
         super().__init__(args)
-        
-    
-    def write_geotiff(self,output_file:str = None):
+
+    def write_geotiff(self, output_file: str = None):
+        if output_file is None:
+            output_file = f"{self.get_outfolder()}/landcover.tif"
         super().write_geotiff(output_file)
         # Apply the color map
-        geotiff_lib.apply_colormap(output_file,self.COLOR_MAP)
-        
-        
+        geotiff_lib.apply_colormap(output_file, SAT_LANDCOVER_MAPCODE.get_color_map())
 
     def extract_bandmatrix(self):
         return super().extract_bandmatrix()
 
     def _get_input_type(self):
-         return [
-                    SentinelHubRequest.input_data(
-                        data_collection=DataCollection.SENTINEL2_L2A,     
-                        time_interval=(self.timeIntervalStart, self.timeIntervalEnd),
-                        other_args={"dataFilter": {"maxCloudCoverage": self.cloud_coverage}}
-                    ),
-                ]
-        
-    
+        return [
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL2_L2A,
+                time_interval=(self.timeIntervalStart, self.timeIntervalEnd),
+                other_args={"dataFilter": {"maxCloudCoverage": self.cloud_coverage}},
+            ),
+        ]
 
-    
     def _get_evalscript(self) -> str:
         return """
 //VERSION=3
