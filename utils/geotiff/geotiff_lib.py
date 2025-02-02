@@ -104,3 +104,18 @@ def tiff_to_png(input_file, output_file):
     """
     image = Image.open(input_file)
     image.save(output_file, "PNG")
+
+
+def apply_colormap(input_file,color_map : dict,band = 1):
+    """
+    Applies a color map to a band in a GeoTIFF file.
+    
+    Args:
+        input_file (str): Path to the input GeoTIFF file.
+        color_map (dict): A dictionary mapping pixel values to RGB colors.
+        band (int): The band to which the color map should be applied (default is 1).
+    Returns:
+        None
+    """
+    with rasterio.open(input_file, "r+") as src:
+        src.write_colormap(1, color_map)

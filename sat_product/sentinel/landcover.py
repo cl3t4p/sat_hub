@@ -1,6 +1,7 @@
 import rasterio
 from . import basetype_sent
 from sentinelhub import SentinelHubRequest, DataCollection
+import utils.geotiff.geotiff_lib as geotiff_lib
 
 class Landcover(basetype_sent.SentinelBaseType):
     
@@ -21,9 +22,8 @@ class Landcover(basetype_sent.SentinelBaseType):
     
     def write_geotiff(self,output_file:str = None):
         super().write_geotiff(output_file)
-        return 
-        with rasterio.open(self.output_file, "r+") as src:
-            src.write_colormap(1, self.COLOR_MAP)
+        # Apply the color map
+        geotiff_lib.apply_colormap(output_file,self.COLOR_MAP)
         
         
 
@@ -79,20 +79,5 @@ function evaluatePixel(sample) {
   } else {                                            // Bare soil/other
     return [6];
   }
-  
-  const map = [
-    [0, [255, 0, 0, 255]],       // Buildings - Red
-    [1, [0, 0, 255, 255]],       // Water - Blue
-    [2, [0, 100, 0, 255]],       // Trees - Dark Green
-    [3, [154, 205, 50, 255]],    // Grass - Yellow Green
-    [4, [255, 215, 0, 255]],     // Agriculture - Gold
-    [5, [139, 69, 19, 255]],     // Mountains - Brown
-    [6, [210, 180, 140, 255]]    // Other - Tan
-    ]; // Map of classes to colors
-
-const visualizer = new ColorMapVisualizer(map);
-
-function evaluatePixel(sample) {
-  return visualizer.process(sample.B03, sample.B04, sample.B08, sample.B11, sample.B12);
 }
 """

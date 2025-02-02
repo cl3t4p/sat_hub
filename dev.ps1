@@ -38,9 +38,9 @@ $debugIndex = $args.IndexOf("--debug")
 if ($debugIndex -ne -1) {
     # Remove the --debug option
     $args = $args[0..($debugIndex - 1)] + $args[($debugIndex + 1)..$args.Length]
-    $startString = 'python -m debugpy --wait-for-client --listen 5678 main.py'
+    $startString = '-m debugpy --wait-for-client --listen 5678'
 } else {
-    $startString = 'python main.py'
+    $startString = ' '
 }
 
 # Run the main Python script with arguments
@@ -120,7 +120,7 @@ switch ($SUBCOMMAND) {
             --point2 45.42 10.98 `
             s3_gprox `
             --version 2 `
-            --meter_radius $args
+            --meter_radius 10 `
     }
     "clean" {
         Remove-Item output\* -Recurse -Force

@@ -21,8 +21,6 @@ class RGB(SentinelBaseType):
             full_data, meta = self._default_rasterio_preprocess(src)
             _range = full_data.shape[0]
             
-            
-            
             with rasterio.open(output_file, "w", **meta) as dst:
                 for i in range(1,_range+1):
                     band_matrix = full_data[i-1]
@@ -60,8 +58,7 @@ class RGB(SentinelBaseType):
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L1C,
                 time_interval=("2020-06-01", "2020-06-30"),
-                # MosaickingOrder.LEAST_CC: Least cloud coverage for a quality image
-                mosaicking_order=MosaickingOrder.LEAST_CC,
+                mosaicking_order=MosaickingOrder.LEAST_CC, # MosaickingOrder.LEAST_CC is used to get the least cloudy image
             )
         ]
     def _get_default_resolution(self):

@@ -1,17 +1,16 @@
 import logging
 import botocore.client
 import rasterio
+from sat_product.basesat import BaseSatType
 from sat_product.geotiff.basetype_geotiff import BaseSat_GeoTiff
 import boto3
 import botocore
 import json
 from shapely.geometry import Polygon
 from utils.geotiff import simplecache
-import numpy as np
 from scipy import signal as signal
 from enum import Enum
 import utils.geotiff.geotiff_lib as geotiff_lib
-import time
 
 
 
@@ -163,124 +162,3 @@ class ESAWC_MAPCODE(Enum):
                 return item.color
         return (0, 0, 0)
 
-class S3_GProx():
-    
-    def __init__(self, s3_product : S3_EsaWorldCover,config):
-        self.log = logging.getLogger(type(self).__name__)
-        self.meter_radius = config["meter_radius"]
-        self.product = s3_product
-        
-    def write_matrix_to_geotiff(self,matrix, product, output_file):
-        """
-        Writes a matrix to a GeoTIFF file.
-        Args:
-            matrix (np.array): The matrix to write to the GeoTIFF.
-            product (BaseSat_GeoTiff): The product object used to extract the matrix.
-            output_file (str): Path to the output GeoTIFF file.
-        Returns:
-            None
-        """
-        self.log.info("Writing matrix to GeoTIFF at " + output_file)
-        with rasterio.open(output_file, "w", **product.geotiff_meta) as dst:
-            dst.write(matrix.astype(rasterio.uint8), 1)
-            dst.meta.update(
-                {
-                    "driver": "GTiff",
-                    "height": matrix.shape[0],
-                    "width": matrix.shape[1],
-                    "transform": product.geotiff_trasform,
-                    "count": 1,
-                    "dtype": rasterio.uint8,
-                }
-            )
-        # Create a green gradient colormap
-        color_map = {i: (0, int(255 * (i / 100)), 0) for i in range(101)}
-
-        # Write the colormap
-        with rasterio.open(output_file, "r+") as src:
-            src.write_colormap(1, color_map)
-        self.log.info("Matrix written to GeoTIFF at " + output_file)
-            
-        
-        
-    def get_percentage_convolution_matrix(
-        self,esamapcode=ESAWC_MAPCODE.TREE_COVER
-    )->np.array:
-        """
-        Extracts a percentage matrix indicating the proportion of a specified target value 
-        within a circular neighborhood around each pixel in the input matrix.
-        Args:
-            product: An object that contains the matrix data and provides the method `extract_matrix()`.
-            radius (int): The radius of the circular neighborhood to consider around each pixel.
-            esamapcode (ESAWC_MAPCODE, optional): The target value to look for in the matrix. 
-                Defaults to ESAWC_MAPCODE.TREE_COVER.
-        Returns:
-            np.array: A matrix of the same shape as the input matrix, where each element 
-            represents the percentage of the target value within the specified radius around 
-            the corresponding pixel.
-        """
-
-        target_value = esamapcode.code
-        
-        # Get the matrix from the product
-        matrix = self.product.extract_bandmatrix()[0]
-        self.log.info("Starting percentage matrix calculation")
-        
-        
-        # Create a circular kernel
-        start_time = time.time()
-        radius = self.meter_radius
-        y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
-        circular_kernel = (x**2 + y**2 <= radius**2).astype(float)
-        
-        self.log.info(f"Circular kernel creation time: {time.time() - start_time} seconds")
-        
-        start_time = time.time()
-        target_matrix = (matrix == target_value).astype(float)
-        self.log.info(f"Binary matrix creation time: {time.time() - start_time:.4f} seconds")
-
-        # Convolve the target matrix with the kernel using FFT
-        start_time = time.time()
-        target_counts = signal.fftconvolve(target_matrix, circular_kernel, mode="same")
-        self.log.info(f"Target counts FFT convolution time: {time.time() - start_time:.4f} seconds")
-
-        # Convolve to count total valid cells using FFT
-        start_time = time.time()
-        total_cells = signal.fftconvolve(np.ones_like(matrix, dtype=float), circular_kernel, mode="same")
-        self.log.info(f"Total cells FFT convolution time: {time.time() - start_time:.4f} seconds")
-
-
-
-
-        # Calculate percentage of target_value around each pixel
-        start_time = time.time()
-        percentageMatrix_non_c_lib = (
-            np.divide(
-            target_counts,
-            total_cells,
-            out=np.zeros_like(target_counts),
-            where=total_cells != 0,
-            )
-            * 100
-        )
-        self.log.info(f"Percentage matrix calculation time (non C++ library): {time.time() - start_time} seconds")
-
-
-        """         
-        start_time = time.time()
-        target_matrix_list = target_matrix.tolist()
-        circular_kernel_list = circular_kernel.tolist()
-        percentageMatrix_c_lib = sat_img_lib.binary_convolve(target_matrix_list, circular_kernel_list)
-        # Convert the list to a numpy array
-        percentageMatrix_c_lib = np.array(percentageMatrix_c_lib)
-        self.log.info(f"Percentage matrix calculation time (C library): {time.time() - start_time} seconds")
-
-        # Check if the results are equal
-        if np.array_equal(percentageMatrix_non_c_lib, percentageMatrix_c_lib):
-            self.log.info("The results from both methods are equal.")
-        else:
-            self.log.warning("The results from both methods are NOT equal.")
-        self.log.info("Percentage matrix calculated
-         """
-        return percentageMatrix_non_c_lib
-    
