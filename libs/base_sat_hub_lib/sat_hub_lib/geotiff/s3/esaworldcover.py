@@ -66,8 +66,6 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
             S3_EsaWorldCover.bucket_name,
             "eu-central-1",
         )
-        self.geotiff_trasform = None
-        self.geotiff_meta = None
 
     def write_geotiff(self, output_file=None):
         if output_file is None:

@@ -1,5 +1,4 @@
 import arguments
-
 import logging 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("MAIN")
@@ -15,7 +14,6 @@ except Exception as e:
     log.error(f"An error occurred: {e}")
     exit()
     
-# Load config.toml
 config = vars(args)
 config["cache_folder"] = 'cache'
 
@@ -24,7 +22,6 @@ config["cache_folder"] = 'cache'
 
 match args.type:
     case "sentinel_gprox":
-        
         from sat_hub_lib.sentinel.landcover import Landcover, SAT_LANDCOVER_MAPCODE
         from sat_hub_lib.extension.gprox import GProx
         product = Landcover(config)
@@ -63,7 +60,6 @@ match args.type:
         product = S3_EsaWorldCover(config)
         # Define GProx target value to map
         value = ESAWC_MAPCODE.TREE_COVER
-        
         gprox = GProx(product,config,value.code)
         output_file = f"{gprox.get_outfolder()}/gprox.tif"
         gprox.write_geotiff(output_file)

@@ -82,6 +82,13 @@ case "$SUBCOMMAND" in
             --version 2 \
             "${ARGS[@]}"
         ;;
+    "corine_landcover")
+        $START_STRING \
+            --point1 45.68 10.58 \
+            --point2 45.42 10.98 \
+            corine_landcover \
+            "${ARGS[@]}"
+        ;;
     "s3_gprox")
         $START_STRING \
             --point1 45.68 10.58 \
