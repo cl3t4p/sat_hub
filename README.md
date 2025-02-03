@@ -5,11 +5,9 @@ Sat Hub is a Python-based project designed to process and analyze satellite imag
 ## Table of Contents
 
 - [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Available Commands](#available-commands)
-- [Contributing](#contributing)
-- [License](#license)
+- [Example](#example)
+- [Produtcs](#products)
+- [PackageInstall](#packageinstall)
 
 ## Installation
 
@@ -82,7 +80,8 @@ Optional parameters:
 
 -----
 
-## Installation of `sat_hub_lib` package on your local machine for development
+## PackageInstall
+Installation of `sat_hub_lib` package on your local machine for development.
 
 0. Install the setuptools
     ```sh
