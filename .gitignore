@@ -1,6 +1,7 @@
 output/
 cache/
 key.json
+test_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -63,6 +63,15 @@ match args.type:
         gprox = GProx(product,config,value.code)
         output_file = f"{gprox.get_outfolder()}/gprox.tif"
         gprox.write_geotiff(output_file)
+    case "file_gprox":
+        from sat_hub_lib.geotiff.local_geotiff import Local_GeoTiff
+        from sat_hub_lib.extension.gprox import GProx
+        product = Local_GeoTiff(config)
+
+        value = config.get("value_to_map")
+        gprox = GProx(product,config,value)
+        output_file = f"{gprox.get_outfolder()}/gprox.tif"
+        gprox.write_geotiff(output_file)
     case _:
         log.error(f"Type {args.type} not supported")
         exit()

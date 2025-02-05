@@ -49,7 +49,7 @@ fi
 
 # Run the main Python script with arguments
 case "$SUBCOMMAND" in
-    "rgb" | "stype" | "stemp" | "vis")
+    "rgb" | "stype" | "stemp" | "landcover")
         $START_STRING \
             --point1 45.68 10.58 \
             --point2 45.42 10.98 \
@@ -95,6 +95,15 @@ case "$SUBCOMMAND" in
             --point2 45.42 10.98 \
             s3_gprox \
             --version 2 \
+            --meter_radius "${ARGS[@]}"
+        ;;
+    "file_gprox")
+        $START_STRING \
+            --point1 45.68 10.58 \
+            --point2 45.42 10.98 \
+            file_gprox \
+            --input_file "test_files/res/esaworldcover.tif"\
+            --value_to_map 10 \
             --meter_radius "${ARGS[@]}"
         ;;
     "clean")

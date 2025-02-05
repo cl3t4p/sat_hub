@@ -60,7 +60,7 @@ class GProx(BaseProduct):
         self.log.info("Starting percentage matrix calculation")
 
         # Create a circular kernel with increasing values outward (normalized to [0,1])
-        radius = self.meter_radius
+        radius = self.meter_radius / self.product.resolution
         y, x = np.ogrid[-radius: radius + 1, -radius: radius + 1]
         distance_from_center = np.sqrt(x**2 + y**2)
         

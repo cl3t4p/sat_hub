@@ -4,6 +4,7 @@ import os
 from shapely import Polygon
 from shapely.geometry import Point
 import logging
+import rasterio
 
 
 class BaseProduct(ABC):
@@ -67,6 +68,21 @@ class BaseProduct(ABC):
         if not os.path.exists(self.__output_folder) and no_create:
             os.makedirs(self.__output_folder)
         return self.__output_folder
+    
+    def _default_rasterio_preprocess(self, geotiff):
+        self.geotiff_meta = geotiff.meta
+        self.geotiff_trasform = geotiff.transform
+
+        data = geotiff.read()
+        out_meta = geotiff.meta.copy()
+        out_meta.update(
+            height=data.shape[1],
+            width=data.shape[2],
+            driver="GTiff",
+            count=data.shape[0],
+            dtype=rasterio.uint8,
+        )
+        return data, out_meta
 
 
 class BaseSatType(BaseProduct):

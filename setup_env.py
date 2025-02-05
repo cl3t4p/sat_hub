@@ -60,7 +60,7 @@ def main():
                 os.chdir(main_dir)
     else:
         print("No 'libs' directory found. Skipping building of libraries.")
-    print("Setup complete. Happy coding!")
+    print("Setup complete.")
 
 if __name__ == "__main__":
     main()

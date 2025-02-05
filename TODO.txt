@@ -1,2 +1,2 @@
--TODO Implement png,jpg,tiff options in the arguments
--TODO Implement aws sentinel-2 download if possible
+-TODO Fix file_gprox read resolution from file
+-TODO Open in a browser the geotiff file and it needs to be colormap compatible

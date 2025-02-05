@@ -77,7 +77,12 @@ def base_parser():
     #S3 ESA World Cover specific options
     esa_s3_parser = subparsers.add_parser('s3_esaworldcover', help='S3 ESA World Cover specific options')
     initialize_s3_subparser(esa_s3_parser)
-    
+
+    #S3 Local file 
+    local_parser = subparsers.add_parser('file_gprox', help='Local GEO TIFF specific options')
+    local_parser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
+    local_parser.add_argument('-f', '--input_file', type=str, required=True, help='Local file path')
+    local_parser.add_argument('--value_to_map', type=int, required=True, help='Value to map',default=1)
     
     return parser
 

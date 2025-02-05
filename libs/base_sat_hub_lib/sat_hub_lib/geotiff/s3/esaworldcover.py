@@ -7,6 +7,7 @@ from shapely.geometry import Polygon
 from sat_hub_lib.utils import simplecache
 from scipy import signal as signal
 from enum import Enum
+import os
 import sat_hub_lib.utils.geotiff_lib as geotiff_lib
 
 
@@ -54,6 +55,16 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
 
     def __init__(self, config):
         super().__init__(config)
+        self.cache_folder = config["cache_folder"]
+
+        # Default resolution for the ESA World Cover
+        self.resolution = 20
+
+        # Check if the cache folder exists otherwise create it
+        self.cache_folder = f"{self.cache_folder}/{self.__class__.__name__}"
+        if not os.path.exists(self.cache_folder):
+            os.makedirs(self.cache_folder)
+
         self.s3_client = boto3.client(
             "s3",
             region_name="eu-central-1",
@@ -164,5 +175,5 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
             case 2:
                 return "v200/2021/map/ESA_WorldCover_10m_2021_v200_"
             case _:
-                print("Invalid version for ESA WorldCover")
+                self.log.error("ESA World Cover version not supported please use 1 or 2")
                 exit()
