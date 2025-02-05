@@ -59,10 +59,13 @@ class GProx(BaseProduct):
         matrix = self.product.extract_bandmatrix()[0]
         self.log.info("Starting percentage matrix calculation")
 
-        # Create a circular kernel
+        # Create a circular kernel with increasing values outward (normalized to [0,1])
         radius = self.meter_radius
-        y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
-        circular_kernel = (x**2 + y**2 <= radius**2).astype(float)
+        y, x = np.ogrid[-radius: radius + 1, -radius: radius + 1]
+        distance_from_center = np.sqrt(x**2 + y**2)
+        
+        # Compute kernel values, ensuring they stay within [0,1] using formula: (r - d) / r
+        circular_kernel = np.clip((radius - distance_from_center) / radius, 0, 1)
 
         target_matrix = (matrix == target_value).astype(float)
 
@@ -84,7 +87,5 @@ class GProx(BaseProduct):
             )
             * 100
         )
-        self.log.info(
-            f"Percentage matrix calculated with shape {percentageMatrix.shape}"
-        )
+        self.log.info(f"Percentage matrix calculated with shape {percentageMatrix.shape}")
         return percentageMatrix
