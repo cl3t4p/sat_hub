@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GeoTIFF Viewer</title>
+    <!-- Include Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Include Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Include GeoRaster Layer for Leaflet -->
+    <script src="https://cdn.jsdelivr.net/npm/georaster/dist/georaster.browser.bundle.min.js"></script>
+    <script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
+    <style>
+        html,
+        body,
+        #map {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #slider {
+            position: absolute;
+            text-align: center;
+            bottom: 10px;
+            display: block;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        .sliders {
+            margin: 5px;
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Map container -->
+    <div id="map"></div>
+    <!-- Slider for opacity control -->
+    <div id="slider">
+        <div class="sliders">
+            <label for="opacityRange">Trasparenza: </label>
+            <input type="range" id="opacityRange" min="0" max="1" step="0.01" value="0.4">
+        </div>
+    </div>
+
+    <script>
+        // Coordinates of the bounding box
+        var bounds = [
+            [{{ latNW }}, {{ lonNW }}], // North-West
+        [{{ latSE }}, {{ lonSE }}]  // South-East
+        ];
+
+        // Initialize the map
+        var map = L.map('map').setView([{{ middle_lat }}, {{ middle_lon }}], {{ zoom }});
+
+        // Add a tile layer to the map
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // URL to the GeoTIFF file
+        var url_to_geotiff_file = "/data.tif";
+
+        // Fetch and load the GeoTIFF file
+        fetch(url_to_geotiff_file)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => {
+                parseGeoraster(arrayBuffer).then(georaster => {
+                    console.log("georaster:", georaster);
+
+                    /*
+                        GeoRasterLayer is an extension of GridLayer,
+                        which means can use GridLayer options like opacity.
+              
+                        Just make sure to include the georaster option!
+              
+                        Optionally set the pixelValuesToColorFn function option to customize
+                        how values for a pixel are translated to a color.
+              
+                        https://leafletjs.com/reference.html#gridlayer
+                    */
+                    var layer = new GeoRasterLayer({
+                        georaster: georaster,
+                        opacity: 1,
+                        resolution: 200 // optional parameter for adjusting display resolution
+                    });
+                    layer.addTo(map);
+
+                    map.fitBounds(layer.getBounds());
+
+                    document.getElementById('opacityRange').addEventListener('input', function (e) {
+                        var opacity = e.target.value;
+                        layer.setOpacity(opacity);
+                    });
+
+                });
+            });
+
+
+    </script>
+
+</body>
+
+</html>

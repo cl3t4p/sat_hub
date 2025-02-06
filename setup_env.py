@@ -29,7 +29,7 @@ def main():
 
 
     # Step 3: Install dependencies if requirements.txt exists
-    requirements_file = "requirements.txt"
+    requirements_file = "scripts/requirements.txt"
     if os.path.exists(requirements_file):
         print(f"Installing dependencies from '{requirements_file}'...")
         subprocess.run([os.path.join(venv_dir, "Scripts" if os.name == "nt" else "bin", "pip"), "install", "-r", requirements_file], check=True)
