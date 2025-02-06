@@ -18,7 +18,6 @@ class GProx(BaseProduct):
             output_file = f"{self.get_outfolder()}/gprox.tif"
 
         matrix = self.extract_bandmatrix()
-        self.log.info("Writing matrix to GeoTIFF at " + output_file)
         with rasterio.open(output_file, "w", **self.product.geotiff_meta) as dst:
             dst.write(matrix.astype(rasterio.uint8), 1)
             dst.meta.update(
@@ -41,10 +40,14 @@ class GProx(BaseProduct):
 
     def extract_bandmatrix(self):
         """
-        Calculate the percentage of a target value around each pixel in a matrix using a circular kernel.
-        This method performs the following steps:
+        Calculate the percentage of a target value around each pixel in a matrix using a circular (or rather, physically circular)
+        kernel that accounts for anisotropic pixel resolution.
+        Steps:
         1. Extracts the matrix from the product.
         2. Creates a circular kernel based on the specified meter radius.
+            - If the product resolution is an integer, a uniform resolution is assumed.
+            - If it is a tuple (res_x, res_y), the physical distance for each kernel cell is computed as 
+            sqrt((x*res_x)**2 + (y*res_y)**2).
         3. Generates a binary matrix where the target value is marked.
         4. Convolves the binary matrix with the circular kernel using FFT to count target values.
         5. Convolves a matrix of ones with the circular kernel using FFT to count total valid cells.
@@ -55,37 +58,52 @@ class GProx(BaseProduct):
 
         target_value = self.value_to_map
 
-        # Get the matrix from the self.product
+        # Get the matrix from the product
         matrix = self.product.extract_bandmatrix()[0]
         self.log.info("Starting percentage matrix calculation")
 
-        # Create a circular kernel with increasing values outward (normalized to [0,1])
-        radius = self.meter_radius / self.product.resolution
-        y, x = np.ogrid[-radius: radius + 1, -radius: radius + 1]
-        distance_from_center = np.sqrt(x**2 + y**2)
-        
-        # Compute kernel values, ensuring they stay within [0,1] using formula: (r - d) / r
-        circular_kernel = np.clip((radius - distance_from_center) / radius, 0, 1)
+        # Create the kernel based on resolution type.
+        if isinstance(self.product.resolution, int):
 
+            # Create a circular kernel with increasing values outward (normalized to [0,1])
+            radius = self.meter_radius / self.product.resolution
+            y, x = np.ogrid[-radius: radius + 1, -radius: radius + 1]
+            distance_from_center = np.sqrt(x**2 + y**2)
+            
+            # Compute kernel values, ensuring they stay within [0,1] using formula: (r - d) / r
+            circular_kernel = np.clip((radius - distance_from_center) / radius, 0, 1)
+
+        elif isinstance(self.product.resolution, tuple):
+            # Unpack the resolution for width and height (e.g., (res_x, res_y) in meters per pixel or degrees converted via a factor)
+            res_x, res_y = self.product.resolution
+            # Calculate how many pixels in each direction correspond to the meter radius.
+            radius_x = self.meter_radius / res_x
+            radius_y = self.meter_radius / res_y
+            # Create grid indices for y and x:
+            y, x = np.ogrid[-radius_y: radius_y + 1, -radius_x: radius_x + 1]
+            # Compute the physical distance for each cell:
+            # Note: x and y here are in pixel offsets; multiply by the corresponding resolution.
+            distance = np.sqrt((x * res_x)**2 + (y * res_y)**2)
+            # Create the kernel: cells within the meter_radius get a value that linearly decays from 1 (at center) to 0 at the edge.
+            circular_kernel = np.clip((self.meter_radius - distance) / self.meter_radius, 0, 1)
+        else:
+            raise ValueError("Unsupported resolution type")
+
+        # Create a binary matrix: 1 where the matrix equals target_value, 0 otherwise.
         target_matrix = (matrix == target_value).astype(float)
 
-        # Convolve the target matrix with the kernel using FFT
+        # Convolve the target matrix with the kernel using FFT to count target occurrences.
         target_counts = signal.fftconvolve(target_matrix, circular_kernel, mode="same")
 
-        # Convolve to count total valid cells using FFT
-        total_cells = signal.fftconvolve(
-            np.ones_like(matrix, dtype=float), circular_kernel, mode="same"
-        )
+        # Convolve a ones matrix with the kernel to count total valid cells per pixel neighborhood.
+        total_cells = signal.fftconvolve(np.ones_like(matrix, dtype=float), circular_kernel, mode="same")
 
-        # Calculate percentage of target_value around each pixel
-        percentageMatrix = (
-            np.divide(
-                target_counts,
-                total_cells,
-                out=np.zeros_like(target_counts),
-                where=total_cells != 0,
-            )
-            * 100
-        )
+        # Calculate percentage (with safe division).
+        percentageMatrix = (np.divide(
+                                target_counts,
+                                total_cells,
+                                out=np.zeros_like(target_counts),
+                                where=total_cells != 0
+                            ) * 100)
         self.log.info(f"Percentage matrix calculated with shape {percentageMatrix.shape}")
         return percentageMatrix
