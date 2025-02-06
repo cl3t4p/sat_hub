@@ -1,2 +1,1 @@
--TODO Fix file_gprox read resolution from file
 -TODO Open in a browser the geotiff file and it needs to be colormap compatible
