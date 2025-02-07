@@ -48,11 +48,12 @@ python main.py `
 GeoTIFF reader is a tool to read and visualize GeoTIFF files.
 
 After running the `python setup_env.py` command, you can run the GeoTIFF reader tool using the following command:
+
 Usage:
 ```sh
 geotiff_reader <path_to_geotiff_files | path_to_geotiff_file | path_to_directory> 
 ```
-After running the command, go to the browser and open the link `http://127.0.0.1:5000/` to visualize the GeoTIFF file.
+After running the command, go to the browser and open the link http://127.0.0.1:5000 to visualize the GeoTIFF file.
 
 
 ## Products
