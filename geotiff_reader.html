@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GeoTIFF Viewer</title>
+    <!-- Include Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Include Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Include GeoRaster Layer for Leaflet -->
+    <script src="https://cdn.jsdelivr.net/npm/georaster/dist/georaster.browser.bundle.min.js"></script>
+    <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"></script>
+    <style>
+        html,
+        body,
+        #map {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #slider {
+            position: absolute;
+            align-items: start;
+            bottom: 2rem;
+            display: block;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .sliders {
+            margin: 5px;
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Map container -->
+    <div id="map"></div>
+
+    <!-- Slider for opacity control -->
+    <div id="slider">
+        <div id="opacitySliders">
+
+        </div>
+        <div>
+            <label for="resolution">Resolution: </label>
+            <input type="number" id="resolution" min="1" value="256">
+            <button id="applyResolution">Apply</button>
+        </div>
+        <input type="text" id="layerName" placeholder="Default : filename">
+        <input type="file" id="fileInput" accept=".tif,.tiff" multiple>
+
+    </div>
+</body>
+<script>
+
+    var geotiffs = [];
+    var active_layers = [];
+
+
+    function updateSliders() {
+        //Remove every slider
+        sliders = document.getElementsByClassName('sliders');
+        for (let i = sliders.length - 1; i >= 0; i--) {
+            sliders[i].remove();
+        }
+
+
+        for (let i = 0; i < geotiffs.length; i++) {
+            var slider = document.createElement('div');
+            slider.classList.add('sliders');
+            slider.innerHTML = `
+            <input type="range" min="0" max="1" step="0.01" value="1" id="opacityRange-${i}">
+            <label for="opacityRange-${i}">Opacity ${geotiffs[i].name}</label>
+            <input type="button" value="Remove" id="remove-${i}">
+        `;
+            document.getElementById('opacitySliders').appendChild(slider);
+        }
+    }
+
+    var baseMaps = {
+        "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        })
+    };
+    // Initialize the map
+    var map = L.map('map', {
+        zoom: 10,
+        layers: [baseMaps.OpenStreetMap]
+    });
+
+    map.setView([45.68, 10.58], 10);
+
+
+    // Create the layer control
+    var layerControl = L.control.layers(baseMaps, {}, {
+        collapsed: false
+    }).addTo(map);
+
+    L.control.scale({
+        imperial: false
+    }).addTo(map);
+
+    function addGeotiffLayer(geotiff_file, geotiff_id, layer_name) {
+
+        //console.log("Adding GeoTIFF layer:", layer_name);
+        geotiff_file.arrayBuffer().then(arrayBuffer => {
+            //console.log("ArrayBuffer obtained for:", layer_name);
+            parseGeoraster(arrayBuffer).then(georaster => {
+                //console.log("GeoRaster parsed for:", layer_name);
+                var resolution = document.getElementById('resolution').value;
+                var opacity = document.getElementById(`opacityRange-${geotiff_id}`).value;
+                var layer = new GeoRasterLayer({
+                    georaster: georaster,
+                    opacity: opacity,
+                    resolution: resolution
+                });
+
+                document.getElementById(`opacityRange-${geotiff_id}`).addEventListener('input', function (e) {
+                    layer.setOpacity(e.target.value);
+                });
+
+                document.getElementById(`remove-${geotiff_id}`).addEventListener('click', function (e) {
+                    map.removeLayer(layer);
+                    geotiffs.splice(geotiff_id, 1);
+                    reloadGeotiffLayer();
+                });
+
+                map.fitBounds(layer.getBounds());
+                layerControl.addOverlay(layer, layer_name);
+                active_layers.push(layer);
+                console.log("Just added layer", layer_name);
+            }).catch(error => {
+                console.error("Error parsing GeoRaster for:", layer_name, error);
+            });
+        }).catch(error => {
+            console.error("Error obtaining ArrayBuffer for:", layer_name, error);
+        });
+    }
+
+    // Add GeoTIFF to the map
+    function reloadGeotiffLayer() {
+        for (let i = 0; i < active_layers.length; i++) {
+            map.removeLayer(active_layers[i]);
+            layerControl.removeLayer(active_layers[i]);
+            console.log("Just removed layer", active_layers[i]);
+        }
+
+        for (let i = 0; i < geotiffs.length; i++) {
+            addGeotiffLayer(geotiffs[i], i, geotiffs[i].name);
+        }
+        updateSliders();
+    }
+
+
+    // Apply resolution
+    document.getElementById('applyResolution').addEventListener('click', function (e) {
+        reloadGeotiffLayer();
+    });
+
+
+
+    //Upload GeoTIFF
+    document.getElementById('fileInput').addEventListener('change', function (event) {
+        const files = event.target.files;
+
+        for (let i = 0; i < files.length; i++) {
+            if (!files[i])
+                continue;
+            geotiffs.push(files[i]);
+        }
+        reloadGeotiffLayer();
+    });
+
+</script>
+
+</html>

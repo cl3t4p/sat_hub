@@ -45,15 +45,12 @@ python main.py `
 ```
 
 ## GeoTIFF_Reader
-GeoTIFF reader is a tool to read and visualize GeoTIFF files.
-
-After running the `python setup_env.py` command, you can run the GeoTIFF reader tool using the following command:
+GeoTIFF reader simple web page to visualize GeoTIFF files.
 
 Usage:
 ```sh
-geotiff_reader <path_to_geotiff_files | path_to_geotiff_file | path_to_directory> 
+Open in any browser the file `geotiff_reader.html`
 ```
-After running the command, go to the browser and open the link http://127.0.0.1:5000 to visualize the GeoTIFF file.
 
 
 ## Products
@@ -127,22 +124,3 @@ Installation of `sat_hub_lib` package on your local machine for development.
     ```
 
 Now you can use the `sat_hub_lib` package in your project.
-
-#### GeoTIFF Reader
-Installation of `GeoTIFF_Reader` package on your local machine.
-
-0. Install the setuptools
-    ```sh
-    pip install setuptools
-    ```
-
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/cl3t4p/sat_hub.git
-    cd libs/base_geotiff_reader
-    ```
-
-2. Install the package:
-    ```sh
-    python setup.py install
-    ```
