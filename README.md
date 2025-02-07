@@ -89,8 +89,6 @@ Optional parameters:
         - `--version` is the version of data v1 (2020) or v2 (2021) | default: 2
         - `--disable_cache` to disable the cache | default: False
 
-- GProx
-
 
 ## GProx
 - Required parameters:
