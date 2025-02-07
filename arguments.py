@@ -1,5 +1,7 @@
 import argparse
 from datetime import datetime
+import re
+valuemap_re = re.compile(r'([\d.]+,[\d.]+)')
 
 def valid_date(s):
     try:
@@ -7,13 +9,15 @@ def valid_date(s):
     except ValueError:
         raise argparse.ArgumentTypeError(f"Not a valid date: '{s}'.")
 
-
-#TODO Ask if html should stay in the code
-def output_type(s):
-    valid_types = ['tiff', 'jpg', 'png','html']
-    if s not in valid_types:
-        raise argparse.ArgumentTypeError(f"Invalid output type: '{s}'. Valid types are {valid_types}.")
-    return s
+def valid_value_map(s):
+    try:
+        all_matches = valuemap_re.findall(s)
+        if len(all_matches) == 0:
+            raise Exception
+        return [tuple(map(float, match.split(','))) for match in all_matches]
+    except Exception:
+        raise argparse.ArgumentTypeError(f"Not a valid value map: '{s}'. Must be in the form of 'value1,weight1 value2,weight2'")
+            
 
     
 def initialize_sentinelhub_subparser(subparser):
@@ -22,7 +26,6 @@ def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('-sd', '--start_date', type=valid_date, required=True, help='Start date')
     subparser.add_argument('-ed', '--end_date', type=valid_date, required=True, help='End date')
     subparser.add_argument('-cc','--cloud_coverage', type=int, default=20, help='Cloud Coverage percentage (default: 20)')
-    subparser.add_argument('--html', action='store_true', help='Output html file') # TODO: Ask if this should stay in the code
     subparser.add_argument('--resolution', type=int, help='Resolution in meters per pixel')
     return subparser
 
@@ -30,6 +33,13 @@ def initialize_s3_subparser(subparser):
     subparser.add_argument('-v', '--version', type=int, required=True, help='Version of the ESA World Cover 1 (2020) or 2 (2021)')
     subparser.add_argument('--disable_cache', action='store_true',default=False, help='Use cache')
     return subparser
+
+def gprox_subparser(subparser):
+    subparser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
+    subparser.add_argument('--value_map', type=valid_value_map, required=False, help='Default value is predefined for each product, but you can specify a value map in the form of "value1,weight1 value2,weight2"')
+    return subparser
+
+
 
     
 def base_parser():
@@ -41,7 +51,7 @@ def base_parser():
     parser.add_argument('-p2', '--point2', type=float, nargs=2, required=True, help='Second point (latitude and longitude)')
     parser.add_argument('-o', '--output', type=str, help="Output folder default is 'output/{type}_*date_time*' where *date_time* is a placeholder for the current date and time")
     
-    parser.add_argument('--output_type', type=str, default='tiff', help='Output type (default: tiff)')
+    #parser.add_argument('--output_type', type=str, default='tiff', help='Output type (default: tiff)')
 
 
     # Add subparsers
@@ -66,23 +76,23 @@ def base_parser():
 
     # Sentinel GProx specific options
     sent_gprox_parser = subparsers.add_parser('sentinel_gprox', help='Sentinel GProx specific options')
-    sent_gprox_parser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
+    gprox_subparser(sent_gprox_parser)
     initialize_sentinelhub_subparser(sent_gprox_parser)
 
     #S3 Gprox specific options
-    gprox_parser = subparsers.add_parser('s3_gprox', help='Gprox specific options')
-    gprox_parser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
-    initialize_s3_subparser(gprox_parser)
+    s3_gprox_parser = subparsers.add_parser('s3_gprox', help='Gprox specific options')
+    gprox_subparser(s3_gprox_parser)
+    initialize_s3_subparser(s3_gprox_parser)
     
     #S3 ESA World Cover specific options
     esa_s3_parser = subparsers.add_parser('s3_esaworldcover', help='S3 ESA World Cover specific options')
     initialize_s3_subparser(esa_s3_parser)
 
-    #S3 Local file 
+    #Local File
     local_parser = subparsers.add_parser('file_gprox', help='Local GEO TIFF specific options')
-    local_parser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
     local_parser.add_argument('-f', '--input_file', type=str, required=True, help='Local file path')
-    local_parser.add_argument('--value_to_map', type=int, required=True, help='Value to map',default=1)
+    gprox_subparser(local_parser)
+    
     
     return parser
 

@@ -1,1 +1,0 @@
--TODO Open in a browser the geotiff file and it needs to be colormap compatible

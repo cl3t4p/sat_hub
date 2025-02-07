@@ -1,17 +1,30 @@
+from abc import ABC, abstractmethod
 import numpy as np
 import rasterio
 from scipy import signal
 from sat_hub_lib.baseproducts import BaseSatType, BaseProduct
 
+class IsMappable(ABC):
+
+    @abstractmethod
+    def get_default_value_map(self):
+        raise NotImplementedError
+    
 
 class GProx(BaseProduct):
 
-    def __init__(self, product: BaseSatType, config, value_to_map: int):
+    def __init__(self, product: BaseSatType, config):
         super().__init__(config)
         self.meter_radius = config["meter_radius"]
+        self.value_map = config.get("value_map", None)
         self.product = product
         self.matrix = None
-        self.value_to_map = value_to_map
+        
+        if self.value_map is None:
+            if self.product.get_default_value_map is not None:
+                self.value_map = self.product.get_default_value_map()
+            else:
+                raise ValueError(f"Value map {self.product.__class__.__name__} is not provided and the product does not have a default value map.")
 
     def write_geotiff(self, output_file: str = None):
         if output_file is None:
@@ -56,11 +69,13 @@ class GProx(BaseProduct):
             np.ndarray: A matrix representing the percentage of the target value around each pixel.
         """
 
-        target_value = self.value_to_map
+        
+        
 
         # Get the matrix from the product
         matrix = self.product.extract_bandmatrix()[0]
         self.log.info("Starting percentage matrix calculation")
+
 
         # Create the kernel based on resolution type.
         if isinstance(self.product.resolution, int):
@@ -89,8 +104,23 @@ class GProx(BaseProduct):
         else:
             raise ValueError("Unsupported resolution type")
 
-        # Create a binary matrix: 1 where the matrix equals target_value, 0 otherwise.
-        target_matrix = (matrix == target_value).astype(float)
+
+        
+        # Get the target value map
+        target_value = self.value_map
+        
+        if isinstance(target_value, dict):
+            # Create a matrix with the target values mapped to integers.
+            target_matrix = np.zeros_like(matrix, dtype=float)
+            for value, target in target_value.items():
+                target_matrix[matrix == value] = target
+        elif isinstance(target_value, int):
+            # Create a binary matrix: 1 where the matrix equals target_value, 0 otherwise.
+            target_value = self.value_to_map
+            target_matrix = (matrix == target_value).astype(float)
+            
+
+
 
         # Convolve the target matrix with the kernel using FFT to count target occurrences.
         target_counts = signal.fftconvolve(target_matrix, circular_kernel, mode="same")

@@ -5,6 +5,7 @@ shapely==2.0.6
 scipy==1.15.1 
 pillow==11.1.0 
 sentinelhub==3.11.0
+flask==3.1.0
 
 # Dev requirements
 setuptools==75.8.0

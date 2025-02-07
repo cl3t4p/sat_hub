@@ -2,6 +2,7 @@ from enum import Enum
 from .basetype_sent import SentinelBaseType
 from sentinelhub import SentinelHubRequest, DataCollection
 import sat_hub_lib.utils.geotiff_lib as geotiff_lib
+from sat_hub_lib.extension import IsMappable
 
 
 class SAT_LANDCOVER_MAPCODE(Enum):
@@ -32,10 +33,15 @@ class SAT_LANDCOVER_MAPCODE(Enum):
         return (0, 0, 0, 255)
 
 
-class Landcover(SentinelBaseType):
+class Landcover(SentinelBaseType,IsMappable):
 
     def __init__(self, args: dict):
         super().__init__(args)
+        
+      
+    def get_default_value_map(self):
+      # Default value for mapping
+        return {SAT_LANDCOVER_MAPCODE.TREES.code: 1, SAT_LANDCOVER_MAPCODE.GRASS.code: 0.8}
 
     def write_geotiff(self, output_file: str = None):
         if output_file is None:

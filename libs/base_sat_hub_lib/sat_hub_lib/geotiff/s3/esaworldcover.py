@@ -3,12 +3,13 @@ from sat_hub_lib.geotiff.basetype_geotiff import BaseSat_GeoTiff
 import boto3
 import botocore
 import json
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, box
 from sat_hub_lib.utils import simplecache
 from scipy import signal as signal
 from enum import Enum
 import os
 import sat_hub_lib.utils.geotiff_lib as geotiff_lib
+from sat_hub_lib.extension import IsMappable
 
 
 class ESAWC_MAPCODE(Enum):
@@ -44,7 +45,7 @@ class ESAWC_MAPCODE(Enum):
         return (0, 0, 0)
 
 
-class S3_EsaWorldCover(BaseSat_GeoTiff):
+class S3_EsaWorldCover(BaseSat_GeoTiff,IsMappable):
     """
     #### Documentation for the ESA World Cover product
     Version 1 [WorldCover_PUM_V1.0.pdf](https://esa-worldcover.s3.eu-central-1.amazonaws.com/v100/2020/docs/WorldCover_PUM_V1.0.pdf)
@@ -77,6 +78,9 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
             S3_EsaWorldCover.bucket_name,
             "eu-central-1",
         )
+        
+    def get_default_value_map(self):
+        return {ESAWC_MAPCODE.TREE_COVER.code: 1, ESAWC_MAPCODE.GRASSLAND.code: 0.8}
 
     def write_geotiff(self, output_file=None):
         if output_file is None:
@@ -164,7 +168,10 @@ class S3_EsaWorldCover(BaseSat_GeoTiff):
         tiles = []
         for feature in geojson["features"]:
             polygon = Polygon(feature["geometry"]["coordinates"][0])
-            if polygon.intersects(self.cord_bounding_box):
+            cord_bounding_box =  box(
+                self.NW_Long, self.SE_Lat, self.SE_Long, self.NW_Lat
+            )
+            if polygon.intersects(cord_bounding_box):
                 tiles.append(feature["properties"]["ll_tile"])
         return tiles
 

@@ -10,7 +10,7 @@ import sat_hub_lib.sentinel.sentinel_lib as sentinel_lib
 
 class SentinelBaseType(BaseSatType):
 
-    max_resolution_allowed = 2500
+    max_resolution_allowed = 2500 # Sentinel Hub allows a maximum resolution of 2500 pixel for the width and height
 
     def __init__(self, config: dict):
         # Initialize the base class with the configuration parameters

@@ -15,9 +15,6 @@ class Vis(SentinelBaseType):
             ),
         ]
 
-    def _get_default_resolution(self):
-        return 20
-
     def _get_evalscript(self):
         return """
         //VERSION=3

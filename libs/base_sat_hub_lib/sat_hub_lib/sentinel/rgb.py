@@ -61,9 +61,6 @@ class RGB(SentinelBaseType):
             )
         ]
 
-    def _get_default_resolution(self):
-        return 13
-
     def _get_evalscript(self):
         return """    
         //VERSION=3
