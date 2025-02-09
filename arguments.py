@@ -70,6 +70,10 @@ def base_parser():
     vis_parser = subparsers.add_parser('vis', help='Vis specific options')
     initialize_sentinelhub_subparser(vis_parser)
 
+    #NDVI specific options
+    ndvi_parser = subparsers.add_parser('ndvi', help='NDVI specific options')
+    initialize_sentinelhub_subparser(ndvi_parser)
+
     #Stemp specific options
     stemp_parser = subparsers.add_parser('stemp', help='Stemp specific options')
     initialize_sentinelhub_subparser(stemp_parser)

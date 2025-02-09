@@ -24,13 +24,16 @@ config["cache_folder"] = 'cache'
 
 
 match args.type:
+    case "ndvi":
+        from sat_hub_lib.sentinel import NDVI
+        product = NDVI(config)
+        product.write_geotiff()
     case "sentinel_gprox":
         from sat_hub_lib.sentinel import Landcover, SAT_LANDCOVER_MAPCODE
         from sat_hub_lib.extension import GProx
         product = Landcover(config)
         gprox = GProx(product,config)
         gprox.write_geotiff()
-    #product.write_geotiff()
     case "landcover":
         from sat_hub_lib.sentinel import Landcover
         product = Landcover(config)

@@ -76,6 +76,8 @@ Optional parameters:
 
 ----
 
+- Landcover (Sentinel-2)
+
 - RGB (Sentinel-2)
     - Optional parameters:
         - `--brightness` is the brightness of the image | default: 2.5
@@ -89,6 +91,9 @@ Optional parameters:
 
 
 ## GProx
+- Product
+    - 's3_gprox'
+    - 'sentinel_gprox'
 - Required parameters:
     - `--meter_radius` is the radius of the kernel
 - Optional parameters:
@@ -96,10 +101,11 @@ Optional parameters:
 
 ## Local
 - Local_GProx
+    - Default parameters:
+        - `--value_map` is the value map in the form of "value1,weight1 value2,weight2" | default: '1,1'
     - Required parameters:
         - `--path` is the path to the image
         - `--meter_radius` is the radius of the kernel
-        - `--value_to_map` is the value to map | default: 1
 
 -----
 

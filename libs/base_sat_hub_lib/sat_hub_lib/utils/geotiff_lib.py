@@ -4,6 +4,8 @@ from shapely import Polygon
 from rasterio.io import MemoryFile
 import os
 from PIL import Image
+import numpy as np
+from scipy.interpolate import interp1d
 
 # Set the environment variable to disable signing requests for public S3 buckets
 os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
@@ -114,3 +116,36 @@ def apply_colormap(input_file, color_map: dict, band=1):
     """
     with rasterio.open(input_file, "r+") as src:
         src.write_colormap(band, color_map)
+
+
+
+def generate_colormap(ramp, num_steps=256):
+    """
+    Generates a continuous colormap dictionary from given ramp values.
+
+    Args:
+        ramp (list): List of (value, hex_color) pairs.
+        num_steps (int): Number of discrete steps for interpolation.
+    
+    Returns:
+        dict: A colormap mapping discrete values to RGB tuples.
+    """
+    # Extract known values and corresponding colors
+    values = np.array([v[0] for v in ramp])
+    colors = np.array([[(v[1] >> 16) & 255, (v[1] >> 8) & 255, v[1] & 255] for v in ramp], dtype=np.float32)
+    
+    # Interpolating each RGB channel
+    interp_r = interp1d(values, colors[:, 0], kind='linear', fill_value="extrapolate")
+    interp_g = interp1d(values, colors[:, 1], kind='linear', fill_value="extrapolate")
+    interp_b = interp1d(values, colors[:, 2], kind='linear', fill_value="extrapolate")
+    
+    # Generate evenly spaced steps
+    step_values = np.linspace(values.min(), values.max(), num_steps)
+    
+    # Apply interpolation to get colors at each step
+    interpolated_colors = {
+        i: (int(interp_r(v)), int(interp_g(v)), int(interp_b(v)))
+        for i, v in enumerate(step_values)
+    }
+    
+    return interpolated_colors

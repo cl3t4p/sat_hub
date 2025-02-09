@@ -49,7 +49,7 @@ fi
 
 # Run the main Python script with arguments
 case "$SUBCOMMAND" in
-    "rgb" | "stype" | "stemp" | "landcover")
+    "rgb" | "stype" | "stemp" | "landcover" | "ndvi")
         $START_STRING \
             --point1 45.68 10.58 \
             --point2 45.42 10.98 \
