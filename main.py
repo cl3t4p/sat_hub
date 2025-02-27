@@ -46,7 +46,7 @@ match args.type:
 
         config = SentinelBaseSettings(**sentinel_conf)
         product = Landcover(config)
-        gprox = GProx(product, args.meter_radius, value_map, output_file)
+        gprox = GProx(product, args.meter_radius, value_map, args.omega,args.function, output_file)
         gprox.write_geotiff()
     case "landcover":
         from sat_hub_lib.sentinel import Landcover
@@ -95,7 +95,7 @@ match args.type:
             args.disable_cache,
             output_file,
         )
-        gprox = GProx(product, args.meter_radius, value_map, output_file)
+        gprox = GProx(product, args.meter_radius, value_map, args.omega,args.function, output_file)
         gprox.write_geotiff()
     case "file_gprox":
         from sat_hub_lib.geotiff import Local_GeoTiff
@@ -105,7 +105,7 @@ match args.type:
             
             args.input_file, args.point1, args.point2, (args.resolution[0],args.resolution[1]), output_file
         )
-        gprox = GProx(product, args.meter_radius, value_map, output_file)
+        gprox = GProx(product, args.meter_radius, value_map, args.omega,args.function, output_file)
         gprox.write_geotiff()
     case _:
         log.error(f"Type {args.type} not supported")

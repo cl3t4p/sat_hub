@@ -19,6 +19,8 @@ def valid_value_map(s):
         raise argparse.ArgumentTypeError(f"Not a valid value map: '{s}'. Must be in the form of 'value1,weight1 value2,weight2'")
             
 def get_value_map(values : list):
+    if values is None:
+        return None
     return {value[0]:value[1] for value in values}
     
 def initialize_sentinelhub_subparser(subparser):
@@ -38,6 +40,8 @@ def initialize_esa_subparser(subparser):
 def gprox_subparser(subparser):
     subparser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
     subparser.add_argument('--value_map', type=valid_value_map, nargs='+', required=False, help='Default value is predefined for each product, but you can specify a value map in the form of "value1,weight1 value2,weight2"')
+    subparser.add_argument('--omega', type=float, default=1, help='Omega value for gprox (default: 1) 1-(x/distance)^omega where x is the distance from the center')
+    subparser.add_argument('--function', type=str, default='1-(x/r)**o', help='Function to calculate the weight of the pixel based on the distance from the center. x is the distance from the center, r is the radius and o is the omega value. Default is 1-(x/r)**o')
     return subparser
 
 
