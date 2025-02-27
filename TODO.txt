@@ -1,2 +1,1 @@
-- Fixed Resolution for LocalFile
 - Using scipy make the gprox kernel use a function to calculate the kernel value

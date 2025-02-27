@@ -7,8 +7,9 @@ if (-not (Test-Path ".venv")) {
 }
 
 # Activate the virtual environment (assuming Windows)
-if (Test-Path ".venv\Scripts\Activate.ps1") {
-    . .\venv\Scripts\activate
+$activateScript = ".venv\Scripts\Activate.ps1"
+if (Test-Path $activateScript) {
+    . $activateScript
 } else {
     Write-Host "Warning: Virtual environment activation script not found."
 }
@@ -78,19 +79,6 @@ switch ($subcommand) {
         ) + $otherArgs
         & $pythonCommand @fullArgs
     }
-    "stype" { 
-        $fullArgs = $pythonArgs + @(
-            "--point1", "45.68", "10.58",
-            "--point2", "45.42", "10.98",
-            "stype",
-            "--client_id", $CLIENT_ID,
-            "--client_secret", $CLIENT_SECRET,
-            "--start_date", "2023-01-01",
-            "--end_date", "2023-12-31",
-            "--cloud_coverage", "20"
-        ) + $otherArgs
-        & $pythonCommand @fullArgs
-    }
     "stemp" { 
         $fullArgs = $pythonArgs + @(
             "--point1", "45.68", "10.58",
@@ -137,14 +125,6 @@ switch ($subcommand) {
             "--point2", "45.42", "10.98",
             "s3_esaworldcover",
             "--version", "2"
-        ) + $otherArgs
-        & $pythonCommand @fullArgs
-    }
-    "corine_landcover" {
-        $fullArgs = $pythonArgs + @(
-            "--point1", "45.68", "10.58",
-            "--point2", "45.42", "10.98",
-            "corine_landcover"
         ) + $otherArgs
         & $pythonCommand @fullArgs
     }

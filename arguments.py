@@ -14,11 +14,12 @@ def valid_value_map(s):
         all_matches = valuemap_re.findall(s)
         if len(all_matches) == 0:
             raise Exception
-        return [tuple(map(float, match.split(','))) for match in all_matches]
+        return tuple(map(float, all_matches[0].split(',')))
     except Exception:
         raise argparse.ArgumentTypeError(f"Not a valid value map: '{s}'. Must be in the form of 'value1,weight1 value2,weight2'")
             
-
+def get_value_map(values : list):
+    return {value[0]:value[1] for value in values}
     
 def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('-id', '--client_id', type=str, required=True, help='Client ID')
@@ -29,14 +30,14 @@ def initialize_sentinelhub_subparser(subparser):
     subparser.add_argument('--resolution', type=int, help='Resolution in meters per pixel')
     return subparser
 
-def initialize_s3_subparser(subparser):
+def initialize_esa_subparser(subparser):
     subparser.add_argument('-v', '--version', type=int, required=True, help='Version of the ESA World Cover 1 (2020) or 2 (2021)')
     subparser.add_argument('--disable_cache', action='store_true',default=False, help='Use cache')
     return subparser
 
 def gprox_subparser(subparser):
     subparser.add_argument('-mr', '--meter_radius', type=int, required=True, help='Meter radius for gprox')
-    subparser.add_argument('--value_map', type=valid_value_map, required=False, help='Default value is predefined for each product, but you can specify a value map in the form of "value1,weight1 value2,weight2"')
+    subparser.add_argument('--value_map', type=valid_value_map, nargs='+', required=False, help='Default value is predefined for each product, but you can specify a value map in the form of "value1,weight1 value2,weight2"')
     return subparser
 
 
@@ -49,7 +50,7 @@ def base_parser():
     parser = argparse.ArgumentParser(description='Sat Hub')
     parser.add_argument('-p1', '--point1', type=float, nargs=2, required=True, help='First point (latitude and longitude)')
     parser.add_argument('-p2', '--point2', type=float, nargs=2, required=True, help='Second point (latitude and longitude)')
-    parser.add_argument('-o', '--output', type=str, help="Output folder default is 'output/{type}_*date_time*' where *date_time* is a placeholder for the current date and time")
+    parser.add_argument('-o', '--output', type=str, help="Output file default is 'output/{type}_*date_time*.tif' where *date_time* is a placeholder for the current date and time")
     
     #parser.add_argument('--output_type', type=str, default='tiff', help='Output type (default: tiff)')
 
@@ -86,15 +87,16 @@ def base_parser():
     #S3 Gprox specific options
     s3_gprox_parser = subparsers.add_parser('s3_gprox', help='Gprox specific options')
     gprox_subparser(s3_gprox_parser)
-    initialize_s3_subparser(s3_gprox_parser)
+    initialize_esa_subparser(s3_gprox_parser)
     
     #S3 ESA World Cover specific options
     esa_s3_parser = subparsers.add_parser('s3_esaworldcover', help='S3 ESA World Cover specific options')
-    initialize_s3_subparser(esa_s3_parser)
+    initialize_esa_subparser(esa_s3_parser)
 
     #Local File
     local_parser = subparsers.add_parser('file_gprox', help='Local GEO TIFF specific options')
     local_parser.add_argument('-f', '--input_file', type=str, required=True, help='Local file path')
+    local_parser.add_argument('-res', '--resolution', type=float,nargs=2 , required=True, help='Resolution in meters per pixel (x,y)')
     gprox_subparser(local_parser)
     
     
