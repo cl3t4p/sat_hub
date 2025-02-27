@@ -1,0 +1,3 @@
+[submodule "libs/sat_hub_lib"]
+	path = libs/sat_hub_lib
+	url = https://github.com/cl3t4p/sat_hub_lib.git
