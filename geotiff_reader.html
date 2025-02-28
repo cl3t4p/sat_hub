@@ -199,7 +199,7 @@
         for (let i = 0; i < files.length; i++) {
             if (!files[i])
                 continue;
-            geotiffs.push(files[i]);
+            geotiffs.unshift(files[i]);
         }
         reloadGeotiffLayer();
     });
