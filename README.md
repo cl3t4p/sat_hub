@@ -5,9 +5,9 @@ Sat Hub is a Python-based project designed to process and analyze satellite imag
 ## Table of Contents
 
 - [Installation](#installation)
-- [GeoTIFF-Reader](#geotiff%20reader)
+- [GeoTIFF-Reader](#geotiff-reader)
 - [Produtcs](#products)
-- [Package-Install](#package%20install)
+- [Package-Install](#package-install)
 
 ## Installation
 
