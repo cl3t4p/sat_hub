@@ -37,6 +37,28 @@
             margin: 5px;
             display: flex;
         }
+        .layer-list {
+            display: flex;
+            flex-direction: column;
+            row-gap: 10px;
+        }
+
+        .layer-entry {
+            display: flex;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            column-gap: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
 
@@ -44,11 +66,13 @@
     <!-- Map container -->
     <div id="map"></div>
 
-    <!-- Slider for opacity control -->
     <div id="slider">
-        <div id="opacitySliders">
-
+        <div class="legend">
+            <span>Opacity</span>
+            <span>Layer Name</span>
+            <span>Remove</span>
         </div>
+        <div class="layer-list" id="opacitySliders"></div>
         <div>
             <label for="resolution">Resolution: </label>
             <input type="number" id="resolution" min="1" value="256">
@@ -56,7 +80,6 @@
         </div>
         <input type="text" id="layerName" placeholder="Default : filename">
         <input type="file" id="fileInput" accept=".tif,.tiff" multiple>
-
     </div>
 </body>
 <script>
@@ -67,21 +90,22 @@
 
     function updateSliders() {
         //Remove every slider
-        sliders = document.getElementsByClassName('sliders');
+        sliders = document.getElementsByClassName('layer-entry');
         for (let i = sliders.length - 1; i >= 0; i--) {
             sliders[i].remove();
         }
 
 
         for (let i = 0; i < geotiffs.length; i++) {
-            var slider = document.createElement('div');
-            slider.classList.add('sliders');
-            slider.innerHTML = `
-            <input type="range" min="0" max="1" step="0.01" value="1" id="opacityRange-${i}">
-            <label for="opacityRange-${i}">Opacity ${geotiffs[i].name}</label>
-            <input type="button" value="Remove" id="remove-${i}">
-        `;
-            document.getElementById('opacitySliders').appendChild(slider);
+            let entry = document.createElement('div');
+            entry.classList.add('layer-entry');
+            entry.innerHTML = `
+                <input type="range" min="0" max="1" step="0.01" value="1" id="opacityRange-${i}">
+                <!-- <input type="checkbox" id="toggleLayer-${i}"> -->
+                <span>${geotiffs[i].name}</span>
+                <button id="remove-${i}">Remove</button>
+            `;
+            document.getElementById('opacitySliders').appendChild(entry);
         }
     }
 
