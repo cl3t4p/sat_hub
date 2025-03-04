@@ -47,9 +47,10 @@
             display: flex;
         }
 
+        .legend,
         .layer-entry {
             display: grid;
-            grid-template-columns: auto auto 1fr auto;
+            grid-template-columns: [opacity] 0.5fr [visibility] auto [name] 1fr [delete] auto;
             /* slider, checkbox, title, remove */
             align-items: center;
             /* vertical centering */
@@ -57,47 +58,40 @@
             /* space between columns */
             padding: 5px;
             border-bottom: 1px solid #ddd;
-        }
 
-        /* Align slider & checkbox to left, and title/remove to right */
-        .layer-entry input[type=range],
-        .layer-entry input[type=checkbox] {
-            justify-self: start;
-            /* ensure they align to the left of their cell */
         }
 
 
-
-        .layer-entry .layer-title {
-            /* By default this will stretch (1fr) – we align its content to the right */
-            justify-self: end;
-            /* align layer title text to right end of its column */
-            /* (Optional) If you prefer the layer name text left-aligned within its cell, 
-     use 'justify-self: start' instead. */
-        }
-
-        .layer-entry .remove-btn {
-            justify-self: end;
-            /* ensure remove button is at far right of its cell */
-        }
-
-        /* Header row (legend) with four columns */
         .legend {
-            display: grid;
-            grid-template-columns: auto auto 1fr auto;
-            /* 4 columns: auto-width, flex, auto */
-            column-gap: 10px;
             font-weight: bold;
             text-align: center;
-            /* center-align header text (optional) */
             margin-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+
+        }
+        .layer-opacity {
+            justify-self: start;
+            grid-column-start: opacity;
+
+
+        }
+        .layer-visibility {
+            justify-self: start;
+            grid-column-start: visibility;
+        }
+        .layer-title {
+            justify-self: end;
+            grid-column-start: name;
+        }
+
+        .remove-button {
+            justify-self: end;
+            grid-column-start: delete;
+
         }
 
         .grid-header {
             font-weight: bold;
             text-align: center;
-            border-bottom: 1px solid #ddd;
         }
 
         .grid-item {
@@ -128,8 +122,11 @@
             <button id="applyResolution">Apply</button>
         </div>
 
-        <input type="text" id="layerName" placeholder="Default : filename">
-        <input type="file" id="fileInput" accept=".tif,.tiff" multiple>
+        <div style="margin-top: 2px;">
+            <input type="text" id="layerName" placeholder="Default : filename">
+            <input type="file" id="fileInput" accept=".tif,.tiff" multiple>
+        </div>
+
     </div>
 </body>
 <script>
@@ -147,10 +144,10 @@
             const entry = document.createElement('div');
             entry.classList.add('layer-entry');
             entry.innerHTML = `
-            <input type="range" min="0" max="1" step="0.01" value="1" id="opacityRange-${index}">
-            <input type="checkbox" id="toggleLayer-${index}">
-            <div class="grid-item">${geotiff.name}</div>
-            <button id="remove-${index}">Remove</button>
+            <input class="layer-opacity" type="range" min="0" max="1" step="0.01" value="1" id="opacityRange-${index}">
+            <input class="layer-visibility" type="checkbox" id="toggleLayer-${index}">
+            <div class="layer-title" class="grid-item">${geotiff.name}</div>
+            <button class="remove-button" id="remove-${index}">Remove</button>
         `;
             slidersContainer.appendChild(entry);
 
