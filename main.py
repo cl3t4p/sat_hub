@@ -15,6 +15,7 @@ except Exception as e:
     exit()
 
 
+
 from sat_hub_lib.sentinel import SentinelBaseSettings
 
 
@@ -45,14 +46,20 @@ match args.type:
         from sat_hub_lib.extension import GProx
 
         config = SentinelBaseSettings(**sentinel_conf)
-        product = Landcover(config)
+        product = Landcover(config,args.ndwi_threshold,
+                                        args.ndvi_grass_min,
+                                        args.ndvi_trees_min,
+                                        args.ndbi_building_min)
         gprox = GProx(product, args.meter_radius, value_map, args.omega,args.function, output_file)
         gprox.write_geotiff()
     case "landcover":
         from sat_hub_lib.sentinel import Landcover
 
         config = SentinelBaseSettings(**sentinel_conf)
-        product = Landcover(config)
+        product = Landcover(config,args.ndwi_threshold,
+                                        args.ndvi_grass_min,
+                                        args.ndvi_trees_min,
+                                        args.ndbi_building_min)
         product.write_geotiff()
     case "vis":
         from sat_hub_lib.sentinel.vis import Vis

@@ -45,6 +45,11 @@ def gprox_subparser(subparser):
     return subparser
 
 
+def landcover_subparser(subparser):
+    subparser.add_argument('--ndwi_threshold', type=float, default=0.2, help='NDWI threshold (default: 0.2)')
+    subparser.add_argument('--ndvi_grass_min', type=float, default=0.3, help='NDVI grass minimum (default: 0.3)')
+    subparser.add_argument('--ndvi_trees_min', type=float, default=0.6, help='NDVI trees minimum (default: 0.6)')
+    subparser.add_argument('--ndbi_building_min', type=float, default=0.16, help='NDBI building minimum (default: 0.16)')
 
     
 def base_parser():
@@ -69,7 +74,10 @@ def base_parser():
  
     #Landcover specific options
     landcover_parser = subparsers.add_parser('landcover', help='Landcover specific options')
+    landcover_subparser(landcover_parser)
     initialize_sentinelhub_subparser(landcover_parser)
+
+    
 
     #Vis specific options
     vis_parser = subparsers.add_parser('vis', help='Vis specific options')
@@ -86,6 +94,7 @@ def base_parser():
     # Sentinel GProx specific options
     sent_gprox_parser = subparsers.add_parser('sentinel_gprox', help='Sentinel GProx specific options')
     gprox_subparser(sent_gprox_parser)
+    landcover_subparser(sent_gprox_parser)
     initialize_sentinelhub_subparser(sent_gprox_parser)
 
     #S3 Gprox specific options
