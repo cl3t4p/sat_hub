@@ -1,1 +1,0 @@
-- Integrate top-right menu with the bottom-right menu on `geotiff_reader.html`

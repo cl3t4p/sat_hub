@@ -47,12 +47,26 @@
             display: flex;
         }
 
+        .layer-entry {
+            display: grid;
+            grid-template-columns: auto auto 1fr auto;
+            /* slider, checkbox, title, remove */
+            align-items: center;
+            /* vertical centering */
+            column-gap: 10px;
+            /* space between columns */
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
         /* Align slider & checkbox to left, and title/remove to right */
         .layer-entry input[type=range],
         .layer-entry input[type=checkbox] {
             justify-self: start;
             /* ensure they align to the left of their cell */
         }
+
+
 
         .layer-entry .layer-title {
             /* By default this will stretch (1fr) – we align its content to the right */
@@ -88,7 +102,7 @@
 
         .grid-item {
             padding: 5px;
-            text-align: center;
+            text-align: left;
         }
     </style>
 </head>
@@ -135,7 +149,7 @@
             entry.innerHTML = `
             <input type="range" min="0" max="1" step="0.01" value="1" id="opacityRange-${index}">
             <input type="checkbox" id="toggleLayer-${index}">
-            <div class="grid-item">${geotiff.name}</span>
+            <div class="grid-item">${geotiff.name}</div>
             <button id="remove-${index}">Remove</button>
         `;
             slidersContainer.appendChild(entry);
