@@ -13,7 +13,7 @@ Sat Hub is a Python-based project designed to process and analyze satellite imag
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/cl3t4p/sat_hub.git
+    git clone --recursive https://github.com/cl3t4p/sat_hub.git
     cd sat_hub
     ```
 
