@@ -11,13 +11,19 @@ Sat Hub is a Python-based project designed to process and analyze satellite imag
 
 ## Installation
 
-1. Clone the repository:
+1. Prerequisite
+    ```sh
+        sudo apt-get install python3-dev
+        sudo dnf install python-devel
+    ```
+
+2. Clone the repository:
     ```sh
     git clone --recursive https://github.com/cl3t4p/sat_hub.git
     cd sat_hub
     ```
 
-2. Set up the virtual environment and install dependencies:
+3. Set up the virtual environment and install dependencies:
     ```sh
     python setup_env.py
     ```
