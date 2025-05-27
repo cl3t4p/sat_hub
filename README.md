@@ -31,6 +31,8 @@ Sat Hub is a Python-based project designed to process and analyze satellite imag
 ## How to Use
 
 ```sh
+# Activate the virtual enviroment
+. .venv/bin/activate
 python main.py --help # or click any of the links below for specific product help
 ```
 
