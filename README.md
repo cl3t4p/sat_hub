@@ -13,8 +13,8 @@ Sat Hub is a Python-based project designed to process and analyze satellite imag
 
 1. Prerequisite
     ```sh
-        sudo apt-get install python3-dev
-        sudo dnf install python-devel
+    sudo apt-get install python3-dev
+    sudo dnf install python-devel
     ```
 
 2. Clone the repository:
